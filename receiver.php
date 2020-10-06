@@ -11,6 +11,7 @@ class MQReceiver{
 	}
 	public function processMessage($data)
 	{
+		// define here
 	}
 	public function run()
 	{
@@ -47,10 +48,11 @@ class MQReceiver{
 					$message = json_encode(array(
 						'command' => 'connect',
 						'client_type' => 'receiver', 
-						'id' => uniqid().time(),
+						'id' => uniqid().time(0),
+						'label'=>$this->label,
 						'data' => array(
-							'id'=>uniqid().time(),
-							'date_time' => gmdate('Y-m-d H:i:s')
+							'id'=>uniqid().time(0),
+							'time' => gmdate('Y-m-d H:i:s')
 						)
 					));
 
@@ -97,37 +99,21 @@ class MQReceiver{
 	}
 }
 class Receiver extends MQReceiver{
-	public function __construct($server = "127.0.0.1", $port = 8889)
+	public $label = '';
+	public function __construct($server = "127.0.0.1", $port = 8889, $label = 'label')
 	{
 		$this->server = $server;
 		$this->port = $port;
+		$this->label = $label;
 	}
 	public function processMessage($data)
 	{
-		echo "\r\nReceiver.processMessage\r\n";
 		print_r($data);
 		echo "\r\n\r\n";
 	}
 }
 
 
-
-
-function catchException($e)
-{
-    if (error_reporting() === 0)
-    {
-        return "";
-    }
-	else
-	{
-		echo $e->getMessage();
-	}
-    // Do some stuff
-}
-
-set_error_handler("exception_error_handler");
-
-$receiver = new Receiver("127.0.0.1", 8887);
+$receiver = new Receiver("127.0.0.1", 8887, 'sms');
 $receiver->run();
 ?>

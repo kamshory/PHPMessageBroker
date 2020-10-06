@@ -55,6 +55,7 @@ $message = json_encode(array(
 	'id' => uniqid().time(),
 	'command' => 'message',
 	'client_type' => 'sender', 
+	'label'=>'sms',
 	'data' => array(
 		'id'=>uniqid(),
 		'time' => time(0),

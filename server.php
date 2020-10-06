@@ -1,14 +1,28 @@
 <?php
 
+class Client{
+	public $socket = null;
+	public $label = null;
+	public $index = null;
+	public function __construct($socket, $label, $index)
+	{
+		$this->socket = $socket;
+		$this->label = $label;
+		$this->index = $index;
+	}
+}
+
 class MQServer{
 	public $showLog = false;
 	public $port = 8889;
 	private $clients = array();
 	private $read = array();
-	private $receivers = array();
+	private $receivers = null;
+
 	public function __construct($port = 8889)
 	{
 		$this->port = $port;
+		$this->receivers = new \SplObjectStorage();
 	}
 
 	private function removeClients($read_sock)
@@ -19,9 +33,10 @@ class MQServer{
 		// Remove client from receiver
 		foreach($this->receivers as $i=>$j)
 		{
-			if($j === $read_sock)
+			if($j->socket === $read_sock)
 			{
 				unset($this->receivers[$i]);
+				break;
 			}
 		}
 		unset($this->clients[$key]);
@@ -48,7 +63,8 @@ class MQServer{
 				continue;
 			}
 
-			if (in_array($sock, $this->read)) {
+			if (in_array($sock, $this->read)) 
+			{
 				$this->clients[] = $newsock = socket_accept($sock);
 			   
 				$msg = json_encode(array("command"=>"connect", "response_code"=>"001"));
@@ -94,7 +110,9 @@ class MQServer{
 			}
 			else if($client_data->client_type === "receiver")
 			{
-				$this->receivers[$client_data->id] = $read_sock;
+				$label = isset($client_data->label)?$client_data->label:'generic';
+				$id = isset($client_data->id)?$client_data->id:(uniqid().time(0));
+				$this->receivers[$client_data->id] = new Client($read_sock, $label, $id);
 				$msg = json_encode(array("command"=>"connect", "response_code"=>"001"));
 				socket_write($read_sock, $msg, strlen($msg));
 			}
@@ -113,18 +131,20 @@ class MQServer{
 		else
 		{
 			$message = json_encode(array("command"=>"message", "data"=>array($client_data->data)));
-			foreach($this->receivers as $id=>$receiver)
+			$label = isset($client_data->label)?$client_data->label:'generic';
+			foreach ($this->receivers as $receiver) 
 			{
-				socket_write($receiver, $message, strlen($message));
+				if($receiver->label == $label)
+				{
+					socket_write($receiver->socket, $message, strlen($message));
+				}
 			}
+			
 		}
 	}
 	private function saveToDatabase($client_data)
 	{
 		// Save to database
-		$message = addslashes(json_encode($client_data));
-		$sql = "insert info message (data) values('$message')";
-		mysql_query($sql);
 	}
 	public function log($text)
 	{
