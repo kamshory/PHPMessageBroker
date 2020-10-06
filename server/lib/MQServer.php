@@ -67,7 +67,7 @@ class MQServer{
 		return \HTPasswd::auth($username, $password, $this->users);
 	}
 
-	private function authorization($data)
+	private function authorization($newsock, $data)
 	{
 		$clientData = json_decode($data);
 		if(isset($clientData->command))
@@ -88,8 +88,19 @@ class MQServer{
 			{
 				$this->reloadUser();
 			}
+			if($clientData->command == 'ping')
+			{
+				$this->replyPing($newsock, $data);
+			}
 		}
 		return false;
+	}
+
+	private function replyPing($newsock, $data)
+	{
+		$clientData = json_decode($data);
+		$message = json_encode($clientData);
+		socket_write($newsock, $message, strlen($message));
 	}
 
 	private function processData($readSock, $data)
@@ -164,7 +175,7 @@ class MQServer{
 				}
 				else
 				{
-					if(!$this->authorization($data))
+					if(!$this->authorization($newsock, $data))
 					{
 						$this->removeClients($newsock);
 						continue;
@@ -185,7 +196,7 @@ class MQServer{
 		while(true);
 		socket_close($sock);
 	}
-	
+
 	private function saveToDatabase($clientData)
 	{
 		// Save to database
