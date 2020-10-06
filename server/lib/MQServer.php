@@ -90,7 +90,51 @@ class MQServer{
 			}
 		}
 		return false;
-	}		
+	}
+
+	private function processData($readSock, $data)
+	{
+		$data = trim($data);
+		if(!empty($data))
+		{
+			$clientData = json_decode($data);
+			if($clientData->type === "receiver" && $clientData->command == "register")
+			{
+				$channel = isset($clientData->channel)?$clientData->channel:'generic';
+				$id = isset($clientData->id)?$clientData->id:(uniqid().time(0));
+				$client = new \stdClass();
+				$client->socket = $readSock;
+				$client->channel = $channel;
+				$client->index = $id;
+				$this->receivers[$clientData->id] = $client; 
+			}
+			else if($clientData->type === "sender" && $clientData->command == "message")
+			{
+				$this->sendToReceivers($clientData);
+			}
+		}
+	}
+
+	private function sendToReceivers($clientData)
+	{
+		if(count($this->receivers) == 0)
+		{
+			$this->saveToDatabase($clientData);
+		}
+		else
+		{
+			$message = json_encode(array("command"=>"message", "data"=>array($clientData->data)));
+			$channel = isset($clientData->channel)?$clientData->channel:'generic';
+			foreach ($this->receivers as $receiver) 
+			{
+				if($receiver->channel == $channel)
+				{
+					socket_write($receiver->socket, $message, strlen($message));
+				}
+			}			
+		}
+	}
+
 	public function run()
 	{ 
 		$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);   
@@ -141,50 +185,7 @@ class MQServer{
 		while(true);
 		socket_close($sock);
 	}
-
-	private function processData($readSock, $data)
-	{
-		$data = trim($data);
-		if(!empty($data))
-		{
-			$clientData = json_decode($data);
-			if($clientData->type === "receiver" && $clientData->command == "register")
-			{
-				$channel = isset($clientData->channel)?$clientData->channel:'generic';
-				$id = isset($clientData->id)?$clientData->id:(uniqid().time(0));
-				$client = new \stdClass();
-				$client->socket = $readSock;
-				$client->channel = $channel;
-				$client->index = $id;
-				$this->receivers[$clientData->id] = $client; 
-			}
-			else if($clientData->type === "sender" && $clientData->command == "message")
-			{
-				$this->sendToReceivers($clientData);
-			}
-		}
-	}
-
-	private function sendToReceivers($clientData)
-	{
-		if(count($this->receivers) == 0)
-		{
-			$this->saveToDatabase($clientData);
-		}
-		else
-		{
-			$message = json_encode(array("command"=>"message", "data"=>array($clientData->data)));
-			$channel = isset($clientData->channel)?$clientData->channel:'generic';
-			foreach ($this->receivers as $receiver) 
-			{
-				if($receiver->channel == $channel)
-				{
-					socket_write($receiver->socket, $message, strlen($message));
-				}
-			}			
-		}
-	}
-
+	
 	private function saveToDatabase($clientData)
 	{
 		// Save to database
