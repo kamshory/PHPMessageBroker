@@ -33,7 +33,7 @@ PHPMessageBroker is one of your choices. With a very easy installation and only 
 	"channel":"sms",
 	"data":[
 	{
-		"id"=>"123",
+		"id":"123",
 		"time":1601973328,
 		"message":"Your OTP is 876543",
 		"receiver":"+6281200000000"
