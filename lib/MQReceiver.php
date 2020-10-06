@@ -4,10 +4,12 @@ class MQReceiver{
 	public $showLog = false;
 	public $server = '127.0.0.1';
 	public $port = 8889;
-	public function __construct($server = "127.0.0.1", $port = 8889)
+	public $channel = 'generic';
+	public function __construct($server = "127.0.0.1", $port = 8889, $channel = 'channel')
 	{
 		$this->server = $server;
 		$this->port = $port;
+		$this->channel = $channel;
 	}
 	
 	public function processMessage($data)
@@ -42,10 +44,9 @@ class MQReceiver{
 				if(!$errorcode)
 				{
 					$this->log("Connection established \n");
-
 					$message = json_encode(array(
 						'command' => 'connect',
-						'client_type' => 'receiver', 
+						'type' => 'receiver', 
 						'id' => uniqid().time(0),
 						'channel'=>$this->channel,
 						'data' => array(
@@ -95,22 +96,5 @@ class MQReceiver{
 	}
 }
 
-class Receiver extends MQReceiver{
-	public $channel = '';
-	public function __construct($server = "127.0.0.1", $port = 8889, $channel = 'channel')
-	{
-		$this->server = $server;
-		$this->port = $port;
-		$this->channel = $channel;
-	}
-	public function processMessage($data)
-	{
-		print_r($data);
-		echo "\r\n\r\n";
-	}
-}
 
-
-$receiver = new Receiver("127.0.0.1", 8887, 'sms');
-$receiver->run();
 ?>

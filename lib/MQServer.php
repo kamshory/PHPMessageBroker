@@ -124,6 +124,5 @@ class MQServer{
 	}
 }
 
-$server = new MQServer(8887);
-$server->run();
+
 ?>

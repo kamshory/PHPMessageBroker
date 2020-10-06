@@ -50,20 +50,6 @@ class MQSender
 		}
 	}
 }
-$server = new MQSender('127.0.0.1', 8887);
-$message = json_encode(array(
-	'id' => uniqid().time(),
-	'command' => 'message',
-	'type' => 'sender', 
-	'channel'=>'sms',
-	'data' => array(
-		'id'=>uniqid(),
-		'time' => time(0),
-		'receiver'=>'+6281266612126',
-		'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
-	)
-));
-$server->showLog = false;
-$server->send($message);
+
 
 ?>
