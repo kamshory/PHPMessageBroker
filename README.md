@@ -115,8 +115,8 @@ class Receiver extends MQReceiver{
 		}
 	}
 }
-
-$receiver = new Receiver("127.0.0.1", 8887, 'sms');
+$channel = 'sms';
+$receiver = new Receiver("127.0.0.1", 8887, $channel);
 $receiver->run();
 ?>
 ```
