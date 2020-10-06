@@ -77,7 +77,7 @@ function error_handler($errno, $errstr, $errfile, $errline)
 $old_error_handler = set_error_handler("error_handler");
 
 require_once dirname(__FILE__)."/lib/MQSender.php";
-$sender = new MQSender('127.0.0.1', 8887);
+$sender = new MQSender('domain.tld', 8887);
 
 $data = array(
 	'id'=>uniqid(),
@@ -116,7 +116,7 @@ class Receiver extends MQReceiver{
 	}
 }
 $channel = 'sms';
-$receiver = new Receiver("127.0.0.1", 8887, $channel);
+$receiver = new Receiver('domain.tld', 8887, $channel);
 $receiver->run();
 ?>
 ```
