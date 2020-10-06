@@ -1,0 +1,70 @@
+<?php
+class MQSender
+{	
+	public $server = '127.0.0.1';
+	public $port = 8889;
+	public $showLog = false;
+	public function __construct($server = "127.0.0.1", $port = 8889)
+	{
+		$this->server = $server;
+		$this->port = $port;
+	}
+	public function processMessage($data)
+	{
+	}
+	public function send($message)
+	{
+		set_time_limit(0);
+
+		$server = $this->server;
+		$port = $this->port;
+
+		if(!($sock = socket_create(AF_INET, SOCK_STREAM, 0))) {
+			$errorcode = socket_last_error();
+			$errormsg = socket_strerror($errorcode);
+			$this->log("Couldn't create socket: [$errorcode] $errormsg \n");
+		}
+
+		$this->log("Socket created \n");
+
+		//Connect socket to remote server
+		if(!socket_connect($sock, $server, $port)) {
+			$errorcode = socket_last_error();
+			$errormsg = socket_strerror($errorcode);
+			$this->log("Could not connect: [$errorcode] $errormsg \n");
+		}
+
+		$this->log("Connection established \n");
+
+		//Send the message to the server
+		if(!socket_send($sock, $message, strlen($message), 0)) 
+		{
+			$errorcode = socket_last_error();
+			$errormsg = socket_strerror($errorcode);
+
+			$this->log("Could not send data: [$errorcode] $errormsg \n");
+		}
+		$this->log("Message send successfully \n");
+	}
+	public function log($text)
+	{
+		if($this->showLog)
+		{
+			echo $text;
+		}
+	}
+}
+$server = new MQSender('127.0.0.1', 8889);
+$message = json_encode(array(
+	'command' => 'message',
+	'client_type' => 'sender', 
+	'data' => array(
+		'id'=>uniqid(),
+		'time' => time(0),
+		'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
+	)
+));
+
+$server->send($message);
+
+?>
