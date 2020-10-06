@@ -39,7 +39,8 @@ class Server extends MQServer{
         }
         catch(PDOException $e)
         {
-            die("Can not connect to database. Host : " . DB_HOST);
+            $this->keepData = false;
+            $this->log("Can not connect to database. Host : " . DB_HOST);
         }
     }
 
@@ -47,8 +48,8 @@ class Server extends MQServer{
 	 * Load channel data from database
 	 * @return String eesage to be sent to the client or null if data not exists
 	 */
-	public function loadFromDatabase($channel)
-	{
+    public function loadFromDatabase($channel)
+    {
         try
         {
             $channel = addslashes($channel);
@@ -76,6 +77,7 @@ class Server extends MQServer{
         }
         catch(Exception $e)
         {
+            $this->initDatabase();
             return null;
         }
  	}
@@ -92,7 +94,7 @@ class Server extends MQServer{
         }
         catch(Exception $e)
         {
-            // do nothing
+            $this->initDatabase();
         }
 	}
 }

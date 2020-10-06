@@ -120,7 +120,7 @@ class MQServer{
 				$client->index = $id;
 				$this->receivers[$clientData->id] = $client; 
 				
-				if($his->keepData)
+				if($this->keepData)
 				{
 					do
 					{
@@ -227,12 +227,12 @@ class MQServer{
 		return null;
 	}
 
-	public function saveToDatabase($channel, $clientData)
+	public function saveToDatabase($clientData)
 	{
 		// Save to database
 	}
 
-	private function log($text)
+	protected function log($text)
 	{
 		if($this->showLog)
 		{
