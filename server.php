@@ -9,6 +9,10 @@ class MQServer{
 		$this->server = $server;
 		$this->port = $port;
 	}
+	
+	/**
+	Override this method
+	*/
 	public function processMessage($data)
 	{
 	}
@@ -16,8 +20,7 @@ class MQServer{
 	public function run()
 	{
 
-		$port = $this->port;
-	   
+		$port = $this->port;	   
 		$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 	   
 		socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
