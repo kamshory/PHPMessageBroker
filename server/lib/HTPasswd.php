@@ -25,8 +25,14 @@ class HTPasswd
         for($i=0; $i<1000; $i++) 
 		{
             $new = ($i & 1) ? $mdp : $binary;
-            if($i % 3) $new .= $salt;
-            if($i % 7) $new .= $mdp;
+			if($i % 3)
+			{
+				$new .= $salt;
+			}
+			if($i % 7)
+			{
+				$new .= $mdp;
+			}
             $new .= ($i & 1) ? $binary : $mdp;
             $binary = pack('H32', md5($new));
         }
@@ -35,7 +41,10 @@ class HTPasswd
 		{
             $k = $i+6;
             $j = $i+12;
-            if($j == 16) $j = 5;
+			if($j == 16)
+			{
+				$j = 5;
+			} 
             $hash = $binary[$i].$binary[$k].$binary[$j].$hash;
         }
         $hash = chr(0).chr(0).$binary[11].$hash;
@@ -83,33 +92,19 @@ class HTPasswd
 			{
 				if(stripos($arr[1], '{SHA}') === 0)
 				{
-					if(self::crypt_sha1($password) === $arr[1])
-					{
-						return true;
-					}
-					else
-					{
-						return false;
-					}
+					return (self::crypt_sha1($password) === $arr[1]);
 				}
 				else if(stripos($arr[1], '$apr1$') === 0)
 				{
-					if(self::check($password, $arr[1]))
-					{
-						return true;
-					}
-					else
-					{
-						return false;
-					}
+					return (self::check($password, $arr[1]));
 				}
 				else
 				{
 					return false;
 				}
-				break;
 			}
 		}
+		return false;
 	}
 }
 
