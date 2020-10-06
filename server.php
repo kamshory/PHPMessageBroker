@@ -1,17 +1,5 @@
 <?php
 
-class Client{
-	public $socket = null;
-	public $channel = null;
-	public $index = null;
-	public function __construct($socket, $channel, $index)
-	{
-		$this->socket = $socket;
-		$this->channel = $channel;
-		$this->index = $index;
-	}
-}
-
 class MQServer{
 	public $showLog = false;
 	public $port = 8889;
@@ -112,7 +100,12 @@ class MQServer{
 			{
 				$channel = isset($client_data->channel)?$client_data->channel:'generic';
 				$id = isset($client_data->id)?$client_data->id:(uniqid().time(0));
-				$this->receivers[$client_data->id] = new Client($read_sock, $channel, $id);
+
+				$client = new \stdClass();
+				$client->socket = $read_sock;
+				$client->channel = $channel;
+				$client->index = $id;
+				$this->receivers[$client_data->id] = $client; 
 				$msg = json_encode(array("command"=>"connect", "response_code"=>"001"));
 				socket_write($read_sock, $msg, strlen($msg));
 			}
