@@ -2,14 +2,12 @@
 
 class MQServer{
 	public $showLog = false;
-	public $server = '127.0.0.1';
 	public $port = 8889;
 	private $clients = array();
 	private $read = array();
 	private $receivers = array();
-	public function __construct($server = "127.0.0.1", $port = 8889)
+	public function __construct($port = 8889)
 	{
-		$this->server = $server;
 		$this->port = $port;
 	}
 
@@ -30,9 +28,7 @@ class MQServer{
 	}
 	
 	public function run()
-	{
-
-	   
+	{ 
 		$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 	   
 		socket_set_option($sock, SOL_SOCKET, SO_REUSEADDR, 1);
@@ -138,6 +134,6 @@ class MQServer{
 		}
 	}
 }
-$server = new MQServer('127.0.0.1', 8887);
+$server = new MQServer(8887);
 $server->run();
 ?>
