@@ -5,16 +5,57 @@ class MQReceiver{
 	public $server = '127.0.0.1';
 	public $port = 8889;
 	public $channel = 'generic';
-	public function __construct($server = "127.0.0.1", $port = 8889, $channel = 'channel')
+	public function __construct($server = "127.0.0.1", $port = 8889, $username = '', $password = '', $channel = 'channel')
 	{
 		$this->server = $server;
 		$this->port = $port;
 		$this->channel = $channel;
+		$this->username = $username;
+		$this->password = $password;
+	}
+	private function login($username, $password)
+	{
+		if($this->socket == null)
+		{
+			$this->connect();
+		}
+		$message = json_encode(array(
+			'id' => uniqid().time(),
+			'command' => 'login',
+			'type' => 'sender', 
+			'authorization'=>base64_encode($username.':'.$password)
+			)
+		);
+		if(!socket_send($this->socket, $message, strlen($message), 0)) 
+		{
+			$this->errorcode = socket_last_error();
+			$errormsg = socket_strerror($this->errorcode);
+
+			$this->log("Could not send data: [$this->errorcode] $errormsg \n");
+		}
+		usleep(100000);
 	}
 	
 	public function processMessage($data)
 	{
 		// define here
+	}
+	private function connect()
+	{
+		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
+			$this->errorcode = socket_last_error();
+			$errormsg = socket_strerror($this->errorcode);
+			$this->log("Couldn't create socket: [$this->errorcode] $errormsg \n");
+		}
+
+		$this->log("Socket created \n");
+
+		//Connect socket to remote server
+		if(!socket_connect($this->socket, $this->server, $this->port)) {
+			$this->errorcode = socket_last_error();
+			$errormsg = socket_strerror($this->errorcode);
+			$this->log("Could not connect: [$this->errorcode] $errormsg \n");
+		}
 	}
 
 	public function run()
@@ -22,30 +63,17 @@ class MQReceiver{
 		set_time_limit(0);
 		do
 		{
-			$sock = null;
+			$this->socket = null;
 			try
 			{
-				$errorcode = "";
-				if(!($sock = socket_create(AF_INET, SOCK_STREAM, 0))) {
-					$errorcode = socket_last_error();
-					$errormsg = socket_strerror($errorcode);
-					$this->log("Couldn't create socket: [$errorcode] $errormsg \n");
-					continue;
-				}
-				$errorcode = '';
-
-				if(!socket_connect($sock, $this->server, $this->port)) {
-					$errorcode = socket_last_error();
-					$errormsg = socket_strerror($errorcode);
-
-					$this->log("Could not connect: [$errorcode] $errormsg \n");
-					continue;
-				}
-				if(!$errorcode)
+				$this->errorcode = "";
+				$this->connect();
+				$this->login($this->username, $this->password);
+				if(!$this->errorcode)
 				{
 					$this->log("Connection established \n");
 					$message = json_encode(array(
-						'command' => 'connect',
+						'command' => 'register',
 						'type' => 'receiver', 
 						'id' => uniqid().time(0),
 						'channel'=>$this->channel,
@@ -54,24 +82,24 @@ class MQReceiver{
 							'time' => gmdate('Y-m-d H:i:s')
 						)
 					));
-					if(!socket_send($sock, $message, strlen($message), 0)) {
-						$errorcode = socket_last_error();
-						$errormsg = socket_strerror($errorcode);
-						$this->log("Could not send data: [$errorcode] $errormsg \n");
+					if(!socket_send($this->socket, $message, strlen($message), 0)) {
+						$this->errorcode = socket_last_error();
+						$errormsg = socket_strerror($this->errorcode);
+						$this->log("Could not send data: [$this->errorcode] $errormsg \n");
 						continue;
 					}
 					do
 					{
-						$data = @socket_read($sock, 8192,  PHP_BINARY_READ);
+						$data = @socket_read($this->socket, 8192,  PHP_BINARY_READ);
 						if($data === false)
 						{
 							continue 2;
 						}
 						if($data !== null)
 						{
-							if($errorcode)
+							if($this->errorcode)
 							{
-								$this->log("Could not read data: [$errorcode] $errormsg \n");
+								$this->log("Could not read data: [$this->errorcode] $errormsg \n");
 							}
 							$this->processMessage($data);
 						}

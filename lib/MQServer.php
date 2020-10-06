@@ -28,7 +28,31 @@ class MQServer{
 		}
 		unset($this->clients[$key]);
 	}
-	
+	private function validate_user($username, $password)
+	{
+		$users = array(
+			'mqadmin'=>'mqpassword'
+		);
+		if(isset($users[$username]))
+		{
+			return ($password == $users[$username]);
+		}
+		return false;
+	}
+	private function authorization($data)
+	{
+		$client_data = json_decode($data);
+		$authorization = $client_data->authorization;
+		$str = base64_decode($authorization);
+		if(stripos($str, ":") !== false)
+		{
+			$arr = explode(":", $str, 2);
+			$username = $arr[0];
+			$password = $arr[1];
+			return $this->validate_user($username, $password);
+		}
+		return false;
+	}		
 	public function run()
 	{ 
 		$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);   
@@ -44,14 +68,27 @@ class MQServer{
 			{
 				continue;
 			}
-			if (in_array($sock, $this->read)) 
+			if(in_array($sock, $this->read)) 
 			{
 				$this->clients[] = $newsock = socket_accept($sock);
 				socket_getpeername($newsock, $ip);
 				$key = array_search($sock, $this->read);
 				unset($this->read[$key]);
+				$data = @socket_read($newsock, 8192,  PHP_BINARY_READ);
+				if ($data === false) 
+				{
+					$this->removeClients($newsock);
+					continue;
+				}
+				else
+				{
+					if(!$this->authorization($data))
+					{
+						$this->removeClients($newsock);
+					}
+				}
 			}		   
-			foreach ($this->read as $read_sock) 
+			foreach($this->read as $read_sock) 
 			{
 				$data = @socket_read($read_sock, 8192,  PHP_BINARY_READ);
 				if ($data === false) 

@@ -1,4 +1,9 @@
 <?php
+function error_handler($errno, $errstr, $errfile, $errline)
+{
+}
+$old_error_handler = set_error_handler("error_handler");
+
 require_once dirname(__FILE__)."/lib/MQReceiver.php";
 class Receiver extends MQReceiver{
 	public function processMessage($message)
@@ -12,6 +17,6 @@ class Receiver extends MQReceiver{
 	}
 }
 
-$receiver = new Receiver("127.0.0.1", 8887, 'sms');
+$receiver = new Receiver("127.0.0.1", 8887, 'mqadmin', 'mqpassword', 'sms');
 $receiver->run();
 ?>
