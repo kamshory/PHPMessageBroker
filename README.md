@@ -63,7 +63,10 @@ function error_handler($errno, $errstr, $errfile, $errline)
 $old_error_handler = set_error_handler("error_handler");
 
 require_once dirname(__FILE__)."/lib/MQServer.php";
-$server = new MQServer(8887);
+
+$port = 8887;
+$server = new MQServer($port, dirname(__FILE__)."/lib/.htpasswd", true);
+$server->showLog = false;
 $server->run();
 ?>
 ```
@@ -77,7 +80,11 @@ function error_handler($errno, $errstr, $errfile, $errline)
 $old_error_handler = set_error_handler("error_handler");
 
 require_once dirname(__FILE__)."/lib/MQSender.php";
-$sender = new MQSender('domain.tld', 8887);
+$address = "domain.tld";
+$port = 8887;
+$username = 'manager';
+$password = 'Albasiko2020^';
+$sender = new MQSender($address, $port, $username, $password);
 
 $data = array(
 	'id'=>uniqid(),
@@ -87,6 +94,7 @@ $data = array(
 	.mt_rand(100000, 999999)
 	."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
 );
+
 $channel = 'sms';
 $sender->showLog = false;
 $sender->send($data, $channel);
@@ -115,8 +123,14 @@ class Receiver extends MQReceiver{
 		}
 	}
 }
+
+$address = "domain.tld";
+$port = 8887;
+$username = 'manager';
+$password = 'Albasiko2020^';
 $channel = 'sms';
-$receiver = new Receiver('domain.tld', 8887, $channel);
+$receiver = new Receiver($address, $port, $username, $password, $channel);
+$receiver->showLog = false;
 $receiver->run();
 ?>
 ```
