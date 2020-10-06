@@ -17,7 +17,12 @@ class Receiver extends MQReceiver{
 	}
 }
 
-$receiver = new Receiver("127.0.0.1", 8887, 'manager', 'Albasiko2020^', 'sms');
+$address = "127.0.0.1";
+$port = 8887;
+$username = 'manager';
+$password = 'Albasiko2020^';
+$channel = 'sms';
+$receiver = new Receiver($address, $port, $username, $password, $channel);
 $receiver->showLog = false;
 $receiver->run();
 ?>
