@@ -11,6 +11,6 @@ user-admin:$apr1$BUB5/4Td$Ndgx5ogWsHlwD9SupuQeo0
 uploader:$apr1$M.59./xT$8tlERsHYFHEJ7L20xI2oJ/';
 
 $server = new MQServer(8887, $users);
-$server->showLog = true;
+$server->showLog = false;
 $server->run();
 ?>

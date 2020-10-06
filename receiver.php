@@ -18,6 +18,6 @@ class Receiver extends MQReceiver{
 }
 
 $receiver = new Receiver("127.0.0.1", 8887, 'manager', 'Albasiko2020^', 'sms');
-$receiver->showLog = true;
+$receiver->showLog = false;
 $receiver->run();
 ?>

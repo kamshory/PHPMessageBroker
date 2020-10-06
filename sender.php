@@ -14,6 +14,6 @@ $data = array(
 	'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
 );
 $channel = 'sms';
-$sender->showLog = true;
+$sender->showLog = false;
 $sender->send($data, $channel);
 ?>
