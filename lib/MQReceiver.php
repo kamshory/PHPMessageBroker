@@ -1,10 +1,10 @@
 <?php
 
 class MQReceiver{
-	public $showLog = false;
-	public $server = '127.0.0.1';
-	public $port = 8889;
-	public $channel = 'generic';
+	public $showLog = true;
+	private $server = '127.0.0.1';
+	private $port = 8889;
+	private $channel = 'generic';
 	public function __construct($server = "127.0.0.1", $port = 8889, $username = '', $password = '', $channel = 'channel')
 	{
 		$this->server = $server;
@@ -115,7 +115,7 @@ class MQReceiver{
 		}
 		while(true);
 	}
-	public function log($text)
+	private function log($text)
 	{
 		if($this->showLog)
 		{

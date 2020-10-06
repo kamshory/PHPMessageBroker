@@ -5,7 +5,7 @@ function error_handler($errno, $errstr, $errfile, $errline)
 $old_error_handler = set_error_handler("error_handler");
 
 require_once dirname(__FILE__)."/lib/MQSender.php";
-$sender = new MQSender('127.0.0.1', 8887, 'mqadmin', 'mqpassword');
+$sender = new MQSender('127.0.0.1', 8887, 'manager', 'Albasiko2020^');
 
 $data = array(
 	'id'=>uniqid(),
@@ -14,6 +14,6 @@ $data = array(
 	'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
 );
 $channel = 'sms';
-$sender->showLog = false;
+$sender->showLog = true;
 $sender->send($data, $channel);
 ?>

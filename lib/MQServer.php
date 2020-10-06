@@ -1,16 +1,47 @@
 <?php
-
+require_once dirname(__FILE__)."/HTPasswd.php";
 class MQServer{
 	public $showLog = false;
-	public $port = 8889;
+	private $port = 8889;
 	private $clients = array();
 	private $read = array();
 	private $receivers = null;
 
-	public function __construct($port = 8889)
+	public function __construct($port = 8889, $user_list = null, $user_from_file = false)
 	{
 		$this->port = $port;
 		$this->receivers = new \SplObjectStorage();
+		if($user_list != null)
+		{
+			$this->user_list = $user_list;
+			$this->user_from_file = $user_from_file;
+			$this->load_user($this->user_list, $this->user_from_file);
+		}
+	}
+	public function reload_user()
+	{
+		$this->load_user($this->user_list);
+	}
+	private function load_user($user_list, $user_from_file)
+	{
+		if(!$user_from_file)
+		{
+			$this->users = $user_list;
+		}
+		else
+		{
+			$file = $user_list;
+			if(file_exists($file))
+			{
+				$this->users = array();
+				$row = file($file);
+				foreach($row as $idx=>$line)
+				{
+					$row[$idx] = trim($line, " \r\n\t ");
+				}
+				$this->users = implode("\r\n", $row);
+			}
+		}
 	}
 
 	private function removeClients($read_sock)
@@ -30,26 +61,29 @@ class MQServer{
 	}
 	private function validate_user($username, $password)
 	{
-		$users = array(
-			'mqadmin'=>'mqpassword'
-		);
-		if(isset($users[$username]))
-		{
-			return ($password == $users[$username]);
-		}
-		return false;
+		return HTPasswd::auth($username, $password, $this->users);
 	}
 	private function authorization($data)
 	{
 		$client_data = json_decode($data);
-		$authorization = $client_data->authorization;
-		$str = base64_decode($authorization);
-		if(stripos($str, ":") !== false)
+		if(isset($client_data->command))
 		{
-			$arr = explode(":", $str, 2);
-			$username = $arr[0];
-			$password = $arr[1];
-			return $this->validate_user($username, $password);
+			if($client_data->command == 'login')
+			{
+				$authorization = $client_data->authorization;
+				$str = base64_decode($authorization);
+				if(stripos($str, ":") !== false)
+				{
+					$arr = explode(":", $str, 2);
+					$username = $arr[0];
+					$password = $arr[1];
+					return $this->validate_user($username, $password);
+				}
+			}
+			if($client_data->command == 'reload-user')
+			{
+				$this->reload_user();
+			}
 		}
 		return false;
 	}		
@@ -85,6 +119,7 @@ class MQServer{
 					if(!$this->authorization($data))
 					{
 						$this->removeClients($newsock);
+						continue;
 					}
 				}
 			}		   
@@ -142,8 +177,7 @@ class MQServer{
 				{
 					socket_write($receiver->socket, $message, strlen($message));
 				}
-			}
-			
+			}			
 		}
 	}
 
@@ -152,7 +186,7 @@ class MQServer{
 		// Save to database
 	}
 
-	public function log($text)
+	private function log($text)
 	{
 		if($this->showLog)
 		{

@@ -1,8 +1,8 @@
 <?php
 class MQSender
 {	
-	public $server = '127.0.0.1';
-	public $port = 8889;
+	private $server = '127.0.0.1';
+	private $port = 8889;
 	public $showLog = false;
 	private $socket = null;
 	private $username = null;
@@ -73,7 +73,7 @@ class MQSender
 				)
 			);
 			
-
+			echo "$message\r\n";
 			$this->log("Connection established \n");
 
 			//Send the message to the server
@@ -88,7 +88,7 @@ class MQSender
 			usleep(20000);
 		}
 	}
-	public function log($text)
+	private function log($text)
 	{
 		if($this->showLog)
 		{
