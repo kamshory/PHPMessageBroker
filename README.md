@@ -2,7 +2,6 @@
 
 # Introduction
 
-
 Once upon a time, you needed a very lightweight message broker that would run on a system with very minimum specifications. On the other hand, your server is ready with the PHP runtime.
 
 Using a very light library is your choice because you don't want to sacrifice enormous resources for a very simple task.
