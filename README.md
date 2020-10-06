@@ -10,7 +10,7 @@ PHPMessageBroker is one of your choices. With a very easy installation and only 
 
 # Password Generation
 
-To generate user password, use tool like https://www.htaccesstools.com/htpasswd-%20generator/
+To generate user password, use tool like https://www.htaccesstools.com/htpasswd-generator/
 
 Supported Algorithm:
 
