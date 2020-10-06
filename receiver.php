@@ -9,15 +9,15 @@ class MQReceiver{
 		$this->server = $server;
 		$this->port = $port;
 	}
+	
 	public function processMessage($data)
 	{
 		// define here
 	}
+
 	public function run()
 	{
 		set_time_limit(0);
-		$server = $this->server;
-		$port = $this->port;
 		do{
 			$sock = null;
 			try
@@ -28,13 +28,12 @@ class MQReceiver{
 					$errormsg = socket_strerror($errorcode);
 
 					$this->log("Couldn't create socket: [$errorcode] $errormsg \n");
-					sleep(1);
 					continue;
 
 				}
 				$errorcode = '';
 
-				if(!socket_connect($sock, $server, $port)) {
+				if(!socket_connect($sock, $this->server, $this->port)) {
 					$errorcode = socket_last_error();
 					$errormsg = socket_strerror($errorcode);
 
@@ -55,14 +54,12 @@ class MQReceiver{
 							'time' => gmdate('Y-m-d H:i:s')
 						)
 					));
-
 					if(!socket_send($sock, $message, strlen($message), 0)) {
 						$errorcode = socket_last_error();
 						$errormsg = socket_strerror($errorcode);
 						$this->log("Could not send data: [$errorcode] $errormsg \n");
 						continue;
 					}
-
 					do
 					{
 						$data = @socket_read($sock, 8192,  PHP_BINARY_READ);
@@ -98,6 +95,7 @@ class MQReceiver{
 		}
 	}
 }
+
 class Receiver extends MQReceiver{
 	public $channel = '';
 	public function __construct($server = "127.0.0.1", $port = 8889, $channel = 'channel')
