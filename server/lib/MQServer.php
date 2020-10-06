@@ -2,35 +2,37 @@
 require_once dirname(__FILE__)."/HTPasswd.php";
 class MQServer{
 	public $showLog = false;
-	private $port = 8889;
+	private $port = 8887;
 	private $clients = array();
 	private $read = array();
 	private $receivers = null;
 
-	public function __construct($port = 8889, $user_list = null, $user_from_file = false)
+	public function __construct($port = 8887, $userList = null, $userFromFile = false)
 	{
 		$this->port = $port;
 		$this->receivers = new \SplObjectStorage();
-		if($user_list != null)
+		if($userList != null)
 		{
-			$this->user_list = $user_list;
-			$this->user_from_file = $user_from_file;
-			$this->load_user($this->user_list, $this->user_from_file);
+			$this->userList = $userList;
+			$this->userFromFile = $userFromFile;
+			$this->loadUser($this->userList, $this->userFromFile);
 		}
 	}
-	public function reload_user()
+	
+	public function reloadUser()
 	{
-		$this->load_user($this->user_list);
+		$this->loadUser($this->userList);
 	}
-	private function load_user($user_list, $user_from_file)
+
+	private function loadUser($userList, $userFromFile)
 	{
-		if(!$user_from_file)
+		if(!$userFromFile)
 		{
-			$this->users = $user_list;
+			$this->users = $userList;
 		}
 		else
 		{
-			$file = $user_list;
+			$file = $userList;
 			if(file_exists($file))
 			{
 				$this->users = array();
@@ -44,14 +46,14 @@ class MQServer{
 		}
 	}
 
-	private function removeClients($read_sock)
+	private function removeClients($readSock)
 	{
 		// remove client for $this->clients array
-		$key = array_search($read_sock, $this->clients);					
+		$key = array_search($readSock, $this->clients);					
 		// Remove client from receiver
 		foreach($this->receivers as $i=>$j)
 		{
-			if($j->socket === $read_sock)
+			if($j->socket === $readSock)
 			{
 				unset($this->receivers[$i]);
 				break;
@@ -59,30 +61,32 @@ class MQServer{
 		}
 		unset($this->clients[$key]);
 	}
-	private function validate_user($username, $password)
+
+	private function validateUser($username, $password)
 	{
-		return HTPasswd::auth($username, $password, $this->users);
+		return \HTPasswd::auth($username, $password, $this->users);
 	}
+
 	private function authorization($data)
 	{
-		$client_data = json_decode($data);
-		if(isset($client_data->command))
+		$clientData = json_decode($data);
+		if(isset($clientData->command))
 		{
-			if($client_data->command == 'login')
+			if($clientData->command == 'login')
 			{
-				$authorization = $client_data->authorization;
+				$authorization = $clientData->authorization;
 				$str = base64_decode($authorization);
 				if(stripos($str, ":") !== false)
 				{
 					$arr = explode(":", $str, 2);
 					$username = $arr[0];
 					$password = $arr[1];
-					return $this->validate_user($username, $password);
+					return $this->validateUser($username, $password);
 				}
 			}
-			if($client_data->command == 'reload-user')
+			if($clientData->command == 'reload-user')
 			{
-				$this->reload_user();
+				$this->reloadUser();
 			}
 		}
 		return false;
@@ -123,54 +127,54 @@ class MQServer{
 					}
 				}
 			}		   
-			foreach($this->read as $read_sock) 
+			foreach($this->read as $readSock) 
 			{
-				$data = @socket_read($read_sock, 8192,  PHP_BINARY_READ);
+				$data = @socket_read($readSock, 8192,  PHP_BINARY_READ);
 				if ($data === false) 
 				{
-					$this->removeClients($read_sock);
+					$this->removeClients($readSock);
 					continue;
 				}
-				$this->processData($read_sock, $data);				
+				$this->processData($readSock, $data);				
 			}
 		}
 		while(true);
 		socket_close($sock);
 	}
 
-	private function processData($read_sock, $data)
+	private function processData($readSock, $data)
 	{
 		$data = trim($data);
 		if(!empty($data))
 		{
-			$client_data = json_decode($data);
-			if($client_data->type === "receiver")
+			$clientData = json_decode($data);
+			if($clientData->type === "receiver" && $clientData->command == "register")
 			{
-				$channel = isset($client_data->channel)?$client_data->channel:'generic';
-				$id = isset($client_data->id)?$client_data->id:(uniqid().time(0));
+				$channel = isset($clientData->channel)?$clientData->channel:'generic';
+				$id = isset($clientData->id)?$clientData->id:(uniqid().time(0));
 				$client = new \stdClass();
-				$client->socket = $read_sock;
+				$client->socket = $readSock;
 				$client->channel = $channel;
 				$client->index = $id;
-				$this->receivers[$client_data->id] = $client; 
+				$this->receivers[$clientData->id] = $client; 
 			}
-			else if($client_data->type === "sender" && $client_data->command == "message")
+			else if($clientData->type === "sender" && $clientData->command == "message")
 			{
-				$this->sendToReceivers($client_data);
+				$this->sendToReceivers($clientData);
 			}
 		}
 	}
 
-	private function sendToReceivers($client_data)
+	private function sendToReceivers($clientData)
 	{
 		if(count($this->receivers) == 0)
 		{
-			$this->saveToDatabase($client_data);
+			$this->saveToDatabase($clientData);
 		}
 		else
 		{
-			$message = json_encode(array("command"=>"message", "data"=>array($client_data->data)));
-			$channel = isset($client_data->channel)?$client_data->channel:'generic';
+			$message = json_encode(array("command"=>"message", "data"=>array($clientData->data)));
+			$channel = isset($clientData->channel)?$clientData->channel:'generic';
 			foreach ($this->receivers as $receiver) 
 			{
 				if($receiver->channel == $channel)
@@ -181,7 +185,7 @@ class MQServer{
 		}
 	}
 
-	private function saveToDatabase($client_data)
+	private function saveToDatabase($clientData)
 	{
 		// Save to database
 	}

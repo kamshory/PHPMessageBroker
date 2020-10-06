@@ -3,15 +3,17 @@
 class MQReceiver{
 	public $showLog = true;
 	private $server = '127.0.0.1';
-	private $port = 8889;
+	private $port = 8887;
 	private $channel = 'generic';
-	public function __construct($server = "127.0.0.1", $port = 8889, $username = '', $password = '', $channel = 'channel')
+	private $clientID = '';
+	public function __construct($server = "127.0.0.1", $port = 8887, $username = '', $password = '', $channel = 'generic')
 	{
 		$this->server = $server;
 		$this->port = $port;
 		$this->channel = $channel;
 		$this->username = $username;
 		$this->password = $password;
+		$this->clientID = uniqid().time();
 	}
 	private function login($username, $password)
 	{
@@ -20,9 +22,9 @@ class MQReceiver{
 			$this->connect();
 		}
 		$message = json_encode(array(
-			'id' => uniqid().time(),
+			'id' => $this->clientID,
 			'command' => 'login',
-			'type' => 'sender', 
+			'type' => 'receiver', 
 			'authorization'=>base64_encode($username.':'.$password)
 			)
 		);
@@ -38,8 +40,9 @@ class MQReceiver{
 	
 	public function processMessage($data)
 	{
-		// define here
+		// define your code here or on your extend class
 	}
+
 	private function connect()
 	{
 		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
@@ -50,7 +53,6 @@ class MQReceiver{
 
 		$this->log("Socket created \n");
 
-		//Connect socket to remote server
 		if(!socket_connect($this->socket, $this->server, $this->port)) {
 			$this->errorcode = socket_last_error();
 			$errormsg = socket_strerror($this->errorcode);
@@ -75,12 +77,8 @@ class MQReceiver{
 					$message = json_encode(array(
 						'command' => 'register',
 						'type' => 'receiver', 
-						'id' => uniqid().time(0),
-						'channel'=>$this->channel,
-						'data' => array(
-							'id'=>uniqid().time(0),
-							'time' => gmdate('Y-m-d H:i:s')
-						)
+						'id' => $this->clientID,
+						'channel'=>$this->channel					
 					));
 					if(!socket_send($this->socket, $message, strlen($message), 0)) {
 						$this->errorcode = socket_last_error();
@@ -115,6 +113,7 @@ class MQReceiver{
 		}
 		while(true);
 	}
+
 	private function log($text)
 	{
 		if($this->showLog)
