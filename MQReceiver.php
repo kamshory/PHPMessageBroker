@@ -18,7 +18,8 @@ class MQReceiver{
 	public function run()
 	{
 		set_time_limit(0);
-		do{
+		do
+		{
 			$sock = null;
 			try
 			{
@@ -26,10 +27,8 @@ class MQReceiver{
 				if(!($sock = socket_create(AF_INET, SOCK_STREAM, 0))) {
 					$errorcode = socket_last_error();
 					$errormsg = socket_strerror($errorcode);
-
 					$this->log("Couldn't create socket: [$errorcode] $errormsg \n");
 					continue;
-
 				}
 				$errorcode = '';
 

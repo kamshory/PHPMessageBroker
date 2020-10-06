@@ -72,7 +72,7 @@ class MQServer{
 		if(!empty($data))
 		{
 			$client_data = json_decode($data);
-			if($client_data->client_type === "receiver")
+			if($client_data->type === "receiver")
 			{
 				$channel = isset($client_data->channel)?$client_data->channel:'generic';
 				$id = isset($client_data->id)?$client_data->id:(uniqid().time(0));
@@ -82,7 +82,7 @@ class MQServer{
 				$client->index = $id;
 				$this->receivers[$client_data->id] = $client; 
 			}
-			else if($client_data->client_type === "sender" && $client_data->command == "message")
+			else if($client_data->type === "sender" && $client_data->command == "message")
 			{
 				$this->sendToReceivers($client_data);
 			}
