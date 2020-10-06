@@ -9,17 +9,12 @@ class MQSender
 		$this->server = $server;
 		$this->port = $port;
 	}
-	public function processMessage($data)
-	{
-	}
+
 	public function send($message)
 	{
 		set_time_limit(0);
 
-		$server = $this->server;
-		$port = $this->port;
-
-		if(!($sock = socket_create(AF_INET, SOCK_STREAM, 0))) {
+		if(!($sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
 			$errorcode = socket_last_error();
 			$errormsg = socket_strerror($errorcode);
 			$this->log("Couldn't create socket: [$errorcode] $errormsg \n");
@@ -28,7 +23,7 @@ class MQSender
 		$this->log("Socket created \n");
 
 		//Connect socket to remote server
-		if(!socket_connect($sock, $server, $port)) {
+		if(!socket_connect($sock, $this->server, $this->port)) {
 			$errorcode = socket_last_error();
 			$errormsg = socket_strerror($errorcode);
 			$this->log("Could not connect: [$errorcode] $errormsg \n");
@@ -45,6 +40,7 @@ class MQSender
 			$this->log("Could not send data: [$errorcode] $errormsg \n");
 		}
 		$this->log("Message send successfully \n");
+		usleep(20000);
 	}
 	public function log($text)
 	{
@@ -54,17 +50,19 @@ class MQSender
 		}
 	}
 }
-$server = new MQSender('127.0.0.1', 8889);
+$server = new MQSender('127.0.0.1', 8887);
 $message = json_encode(array(
+	'id' => uniqid().time(),
 	'command' => 'message',
 	'client_type' => 'sender', 
 	'data' => array(
 		'id'=>uniqid(),
 		'time' => time(0),
+		'receiver'=>'+6281266612126',
 		'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
 	)
 ));
-
+$server->showLog = false;
 $server->send($message);
 
 ?>

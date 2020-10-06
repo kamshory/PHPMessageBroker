@@ -110,25 +110,24 @@ class Receiver extends MQReceiver{
 	}
 }
 
-function exception_error_handler($errno, $errstr, $errfile, $errline )
-{
-    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
-}
+
 
 
 function catchException($e)
 {
     if (error_reporting() === 0)
     {
-        return;
+        return "";
     }
-
+	else
+	{
+		echo $e->getMessage();
+	}
     // Do some stuff
 }
 
 set_error_handler("exception_error_handler");
-set_exception_handler('catchException');
 
-$receiver = new Receiver("127.0.0.1", 8889);
+$receiver = new Receiver("127.0.0.1", 8887);
 $receiver->run();
 ?>
