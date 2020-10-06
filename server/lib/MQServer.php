@@ -6,6 +6,8 @@ class MQServer{
 	private $clients = array();
 	private $read = array();
 	private $receivers = null;
+	protected $nexRecord = 0;
+	protected $keepData = false;
 
 	public function __construct($port = 8887, $userList = null, $userFromFile = false)
 	{
@@ -67,9 +69,8 @@ class MQServer{
 		return \HTPasswd::auth($username, $password, $this->users);
 	}
 
-	private function authorization($newsock, $data)
+	private function authorization($newsock, $clientData)
 	{
-		$clientData = json_decode($data);
 		if(isset($clientData->command))
 		{
 			if($clientData->command == 'login')
@@ -118,6 +119,19 @@ class MQServer{
 				$client->channel = $channel;
 				$client->index = $id;
 				$this->receivers[$clientData->id] = $client; 
+				
+				if($his->keepData)
+				{
+					do
+					{
+						$message = $this->loadFromDatabase($clientData->channel);
+						if($message !== null)
+						{
+							socket_write($readSock, $message, strlen($message));
+						}
+					}
+					while($this->nextRecord > 0);
+				}
 			}
 			else if($clientData->type === "sender" && $clientData->command == "message")
 			{
@@ -128,7 +142,7 @@ class MQServer{
 
 	private function sendToReceivers($clientData)
 	{
-		if(count($this->receivers) == 0)
+		if(count($this->receivers) == 0 && $this->keepData)
 		{
 			$this->saveToDatabase($clientData);
 		}
@@ -175,10 +189,15 @@ class MQServer{
 				}
 				else
 				{
-					if(!$this->authorization($newsock, $data))
+					$data = trim($data);
+					if(!empty($data))
 					{
-						$this->removeClients($newsock);
-						continue;
+						$clientData = json_decode($data);
+						if(!$this->authorization($newsock, $clientData))
+						{
+							$this->removeClients($newsock);
+							continue;
+						}
 					}
 				}
 			}		   
@@ -197,7 +216,18 @@ class MQServer{
 		socket_close($sock);
 	}
 
-	private function saveToDatabase($clientData)
+	/**
+	 * Load channel data from database
+	 * @return String eesage to be sent to the client or null if data not exists
+	 */
+	public function loadFromDatabase($channel)
+	{
+		// Load from database
+		$this->nexRecord = 0;
+		return null;
+	}
+
+	public function saveToDatabase($channel, $clientData)
 	{
 		// Save to database
 	}
