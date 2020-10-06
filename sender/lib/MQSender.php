@@ -17,6 +17,7 @@ class MQSender
 		$this->connect();
 		$this->login($this->username, $this->password);
 	}
+
 	private function login($username, $password)
 	{
 		if($this->socket == null)
@@ -37,8 +38,9 @@ class MQSender
 
 			$this->log("Could not send data: [$errorcode] $errormsg \n");
 		}
-		usleep(100000);
+		usleep(10000);
 	}
+
 	private function connect()
 	{
 		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
@@ -56,6 +58,7 @@ class MQSender
 			$this->log("Could not connect: [$errorcode] $errormsg \n");
 		}
 	}
+
 	public function send($data, $channel)
 	{
 		if($this->socket == null)
@@ -85,9 +88,10 @@ class MQSender
 				$this->log("Could not send data: [$errorcode] $errormsg \n");
 			}
 			$this->log("Message send successfully \n");
-			usleep(20000);
+			usleep(10000);
 		}
 	}
+
 	private function log($text)
 	{
 		if($this->showLog)
