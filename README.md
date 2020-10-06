@@ -8,50 +8,6 @@ Using a very light library is your choice because you don't want to sacrifice en
 
 PHPMessageBroker is one of your choices. With a very easy installation and only using two server-side files, you can create a message broker that can forward messages from one client to another.
 
-## Message Specification
-
-**Receiver**
-
-```json
-{
-	"command":"connect",
-	"id":"123456",
-	"type":"receiver",
-	"channel":"sms",
-	"data":[
-	]
-}
-```
-
-**Sender**
-```json
-{
-	"command":"message",
-	"id":"123456",
-	"type":"sender",
-	"channel":"sms",
-	"data":[
-	{
-		"id":"123",
-		"time":1601973328,
-		"message":"Your OTP is 876543",
-		"receiver":"+6281200000000"
-	}
-	]
-}
-```
-
-1. **command**
-Command 
-2. **id**
-Client ID
-3. **type**
-Client type, "sender" or "receiver"
-4. **channel**
-Channel of the message. User can make many channel and server will only send the message to the same channel
-5. **data**
-Data to send
-
 # Example 
 
 **Server**
