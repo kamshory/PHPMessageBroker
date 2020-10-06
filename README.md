@@ -8,6 +8,15 @@ Using a very light library is your choice because you don't want to sacrifice en
 
 PHPMessageBroker is one of your choices. With a very easy installation and only using two server-side files, you can create a message broker that can forward messages from one client to another.
 
+# Password Generation
+
+To generate user password, use tool like https://www.htaccesstools.com/htpasswd-generator/
+
+Supported Algorithm:
+
+1. SHA
+2. APR1
+
 # Example 
 
 **Server**
@@ -21,7 +30,7 @@ $old_error_handler = set_error_handler("error_handler");
 require_once dirname(__FILE__)."/lib/MQServer.php";
 
 $port = 8887;
-$server = new MQServer($port, dirname(__FILE__)."/lib/.htpasswd", true);
+$server = new MQServer($port, dirname(__FILE__)."/.htpasswd", true);
 $server->showLog = false;
 $server->run();
 ?>
