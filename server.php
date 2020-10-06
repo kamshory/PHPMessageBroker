@@ -2,12 +2,12 @@
 
 class Client{
 	public $socket = null;
-	public $label = null;
+	public $channel = null;
 	public $index = null;
-	public function __construct($socket, $label, $index)
+	public function __construct($socket, $channel, $index)
 	{
 		$this->socket = $socket;
-		$this->label = $label;
+		$this->channel = $channel;
 		$this->index = $index;
 	}
 }
@@ -110,9 +110,9 @@ class MQServer{
 			}
 			else if($client_data->client_type === "receiver")
 			{
-				$label = isset($client_data->label)?$client_data->label:'generic';
+				$channel = isset($client_data->channel)?$client_data->channel:'generic';
 				$id = isset($client_data->id)?$client_data->id:(uniqid().time(0));
-				$this->receivers[$client_data->id] = new Client($read_sock, $label, $id);
+				$this->receivers[$client_data->id] = new Client($read_sock, $channel, $id);
 				$msg = json_encode(array("command"=>"connect", "response_code"=>"001"));
 				socket_write($read_sock, $msg, strlen($msg));
 			}
@@ -131,10 +131,10 @@ class MQServer{
 		else
 		{
 			$message = json_encode(array("command"=>"message", "data"=>array($client_data->data)));
-			$label = isset($client_data->label)?$client_data->label:'generic';
+			$channel = isset($client_data->channel)?$client_data->channel:'generic';
 			foreach ($this->receivers as $receiver) 
 			{
-				if($receiver->label == $label)
+				if($receiver->channel == $channel)
 				{
 					socket_write($receiver->socket, $message, strlen($message));
 				}

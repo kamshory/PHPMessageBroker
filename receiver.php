@@ -49,7 +49,7 @@ class MQReceiver{
 						'command' => 'connect',
 						'client_type' => 'receiver', 
 						'id' => uniqid().time(0),
-						'label'=>$this->label,
+						'channel'=>$this->channel,
 						'data' => array(
 							'id'=>uniqid().time(0),
 							'time' => gmdate('Y-m-d H:i:s')
@@ -99,12 +99,12 @@ class MQReceiver{
 	}
 }
 class Receiver extends MQReceiver{
-	public $label = '';
-	public function __construct($server = "127.0.0.1", $port = 8889, $label = 'label')
+	public $channel = '';
+	public function __construct($server = "127.0.0.1", $port = 8889, $channel = 'channel')
 	{
 		$this->server = $server;
 		$this->port = $port;
-		$this->label = $label;
+		$this->channel = $channel;
 	}
 	public function processMessage($data)
 	{
