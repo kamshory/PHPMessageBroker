@@ -17,6 +17,21 @@ Supported Algorithm:
 1. SHA
 2. APR1
 
+# Database
+
+If you want to keep data to a database to ensure that message received to the receiver, database structure shown below:
+
+```sql
+CREATE TABLE IF NOT EXISTS `data` (
+  `data_id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `channel` varchar(100) DEFAULT NULL,
+  `data` longtext,
+  `created` datetime DEFAULT NULL,
+  PRIMARY KEY (`data_id`),
+  KEY `channel` (`channel`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;
+```
+
 # Example 
 
 **Server**
