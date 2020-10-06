@@ -8,6 +8,15 @@ Using a very light library is your choice because you don't want to sacrifice en
 
 PHPMessageBroker is one of your choices. With a very easy installation and only using two server-side files, you can create a message broker that can forward messages from one client to another.
 
+# Password Generation
+
+To generate user password, use tool like https://www.htaccesstools.com/htpasswd-%20generator/
+
+Supported Algorithm:
+
+1. SHA
+2. APR1
+
 # Example 
 
 **Server**
