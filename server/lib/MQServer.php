@@ -3,15 +3,21 @@ require_once dirname(__FILE__)."/HTPasswd.php";
 class MQServer{
 	public $showLog = false;
 	private $port = 8887;
+	private $numberOfReceiver = 1;
 	private $clients = array();
 	private $read = array();
 	private $receivers = null;
 	protected $nexRecord = 0;
 	protected $keepData = false;
 
-	public function __construct($port = 8887, $userList = null, $userFromFile = false)
+	public function __construct($port = 8887, $numberOfReceiver = 1, $userList = null, $userFromFile = false)
 	{
 		$this->port = $port;
+		if($numberOfReceiver < 0)
+		{
+			$numberOfReceiver = 0;
+		}
+		$this->numberOfReceiver = $numberOfReceiver;
 		$this->receivers = new \SplObjectStorage();
 		if($userList != null)
 		{
@@ -150,11 +156,17 @@ class MQServer{
 		{
 			$message = json_encode(array("command"=>"message", "data"=>array($clientData->data)));
 			$channel = isset($clientData->channel)?$clientData->channel:'generic';
+			$count = 0;
 			foreach ($this->receivers as $receiver) 
 			{
 				if($receiver->channel == $channel)
 				{
+					$count++;
 					socket_write($receiver->socket, $message, strlen($message));
+					if($count >= $this->numberOfReceiver && $this->numberOfReceiver > 0)
+					{
+					break;
+					}
 				}
 			}			
 		}
