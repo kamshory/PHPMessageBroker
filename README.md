@@ -177,7 +177,8 @@ class Server extends MQServer{
 }
 
 $port = 8887;
-$server = new Server($port, 0, dirname(__FILE__)."/.htpasswd", true, true, "localhost", 3306, "message_broker", "root", "alto1234");
+$server = new Server($port, 0, dirname(__FILE__)."/.htpasswd", true, 
+	true, "localhost", 3306, "message_broker", "root", "alto1234");
 $server->showLog = true;
 $server->run();
 ?>
@@ -202,7 +203,8 @@ $data = array(
 	'id'=>uniqid(),
 	'time' => time(0),
 	'receiver'=>'+6281200000000',
-	'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
+	'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)
+		."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
 );
 
 $channel = 'sms';
@@ -227,7 +229,9 @@ class Receiver extends MQReceiver{
 		$rows = $object->data;
 		foreach($rows as $idx=>$data)
 		{
-			echo "Time     : ".date('j F Y H:i:s', $data->time)."\r\nReceiver : ".$data->receiver."\r\nMessage  : ".$data->message."\r\n\r\n";
+			echo "Time     : ".date('j F Y H:i:s', $data->time)
+			."\r\nReceiver : ".$data->receiver
+			."\r\nMessage  : ".$data->message."\r\n\r\n";
 		}
 	}
 }
