@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS `data` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1;
 ```
 
+You can define the fields in the table yourself according to your needs, but if you want to save the data in JSON format then the structure above is enough.
+
 # Example 
 
 **Server Without Database**
