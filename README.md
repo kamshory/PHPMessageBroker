@@ -16,6 +16,10 @@ PHPMessageBroker is one of your choices. With a very easy installation and only 
 
 From image above, we can see that message sender (client 1) can send message to receiver (client 2). Both sender and receiver do not require public IP address.
 
+![Topology](https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/multi-channel.png)
+
+PHPMessageBroker support multi channel. Receivers only will receive message with same channel. The user can limit the number of receivers for each channel. This is very useful for avoiding duplicate sending if an application is running more than one receiving process.
+
 # User Credentials
 
 To generate user password, use tool like https://www.htaccesstools.com/htpasswd-generator/
