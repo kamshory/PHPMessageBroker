@@ -73,12 +73,13 @@ MQServer(int $port, int $numberOfReceiver, String $userList,
 [boolean $userFromFile])
 ```
 
-1. `$port` is server port
-2. `$numberOfReceiver`  number of receiver
+1. `$port` is the server port
+2. `$numberOfReceiver` is the number of receiver. If the number of receiver more than `$numberOfReceiver`, only first `$numberOfReceiver` will receive the message.
 3. `$userList` is pair of username and password separated by colon. For example:
 `"admin:$apr1$v07ls1hi$OayaxtrCFIHIzuhpaSL9/0"`
 If more than one user, separate by return (\r\n).
-4. `$userFromFile` is indicate that `$userList` is file name instead of pair of username and password.
+4. `$userFromFile` indicate that `$userList` is file name instead of pair of username and password.
+
 
 **Server With Database**
 
@@ -219,18 +220,18 @@ MQServer(int $port, int $numberOfReceiver, String $userList,
 int $dbPort, String $dbName, String $dbUser, String $dbPass]])
 ```
 
-1. `$port` is server port
-2. `$numberOfReceiver` number of receiver. If the number of receiver more than `$numberOfReceiver`, only first `$numberOfReceiver` will receive the message.
+1. `$port` is the server port
+2. `$numberOfReceiver` is the number of receiver. If the number of receiver more than `$numberOfReceiver`, only first `$numberOfReceiver` will receive the message.
 3. `$userList` is pair of username and password separated by colon. For example:
 `"admin:$apr1$v07ls1hi$OayaxtrCFIHIzuhpaSL9/0"`
 If more than one user, separate by return (\r\n).
-4. `$userFromFile` is indicate that `$userList` is file name instead of pair of username and password.
+4. `$userFromFile` indicate that `$userList` is file name instead of pair of username and password.
 5. `$keepData` indicate that server will keep data until any receiver received the messages
-6. `$dbHost` is database host name or IP address
-7. `$dbPort` is database port number
-8. `$dbName` is database name
-9. `$dbUser` is database user
-10. `$dbPass` is database password 
+6. `$dbHost` is the database host name or IP address
+7. `$dbPort` is the database port number
+8. `$dbName` is the database name
+9. `$dbUser` is the database user
+10. `$dbPass` is the database password 
 
 **Sender**
 ```php
@@ -267,10 +268,10 @@ $sender->send($data, $channel);
 MQSender(String $address, int $port, String $username, String $password)
 ```
 
-1. `$address` is host name or IP address of the message broker server
-2. `$port` is port number of the message broker server
-3. `$username` is username of the sender 
-4. `$password` is password of the sender
+1. `$address` is the host name or IP address of the message broker server
+2. `$port` is the port number of the message broker server
+3. `$username` is the username of the sender 
+4. `$password` is the password of the sender
 
 Note:
 The username of the sender and recipient does not have to be the same.
@@ -318,11 +319,11 @@ $receiver->run();
 ?>
 ```
 
-1. `$address` is host name or IP address of the message broker server
-2. `$port` is port number of the message broker server
-3. `$username` is username of the sender 
-4. `$password` is password of the sender
-5. `$channel` is channel name
+1. `$address` is the host name or IP address of the message broker server
+2. `$port` is the port number of the message broker server
+3. `$username` is the username of the sender 
+4. `$password` is the password of the sender
+5. `$channel` is the channel name
 
 Note:
 The username of the sender and recipient does not have to be the same.
