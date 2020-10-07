@@ -23,7 +23,7 @@ PHPMessageBroker support multi channel. Receivers only will receive message with
 
 # User Credentials
 
-To generate user password, use tool like https://www.htaccesstools.com/htpasswd-generator/
+PHPMessageBroker use HTPasswd as user credentials. To generate user password, use tool like https://www.htaccesstools.com/htpasswd-generator/
 
 Supported Algorithm:
 
