@@ -12,7 +12,7 @@ PHPMessageBroker is one of your choices. With a very easy installation and only 
 
 # Topolgy
 
-![Topology] (https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/topology.png)
+![Topology](https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/topology.png)
 
 # User Credentials
 
