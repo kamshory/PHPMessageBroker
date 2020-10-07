@@ -71,9 +71,9 @@ class Server extends MQServer{
     private $dbUser = null;
     private $dbPass = null;
     private $recordLimit = 5;
-    public function __construct($port = 8887, $userList = null, $userFromFile = false, $keepData = false, $dbHost = null, $dbPort = null, $dbName = null, $dbUser = null, $dbPass = null)
+    public function __construct($port = 8887, $numberOfReceiver = 1, $userList = null, $userFromFile = false, $keepData = false, $dbHost = null, $dbPort = null, $dbName = null, $dbUser = null, $dbPass = null)
     {
-        parent::__construct($port, $userList, $userFromFile);
+        parent::__construct($port, $numberOfReceiver, $userList, $userFromFile);
         if($keepData)
         {
             $this->keepData = $keepData;
@@ -173,7 +173,7 @@ class Server extends MQServer{
 }
 
 $port = 8887;
-$server = new Server($port, dirname(__FILE__)."/.htpasswd", true, true, "localhost", 3306, "message_broker", "root", "alto1234");
+$server = new Server($port, 0, dirname(__FILE__)."/.htpasswd", true, true, "localhost", 3306, "message_broker", "root", "alto1234");
 $server->showLog = true;
 $server->run();
 ?>
