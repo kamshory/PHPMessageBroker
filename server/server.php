@@ -35,7 +35,8 @@ class Server extends MQServer{
         // Init database here
         try
         {
-            $this->database = new PDO("mysql:host=".$this->dbHost.";port=" . $this->dbPort . ";dbname=" . $this->dbName, $this->dbUser, $this->dbPass);
+            $url = "mysql:host=".$this->dbHost.";port=" . $this->dbPort . ";dbname=" . $this->dbName;
+            $this->database = new PDO($url, $this->dbUser, $this->dbPass);
         }
         catch(PDOException $e)
         {
@@ -56,24 +57,40 @@ class Server extends MQServer{
             $sql = "select * from data where channel = '$channel' ";
             $db_rs = $this->database->prepare($sql);
             $db_rs->execute();
-            $num = $db_rs->rowCount() - $this->recordLimit;
-            if($num < 0)
+            $rowCount = $db_rs->rowCount();
+            if($rowCount > 0)
             {
-                $num = 0;
-            }
-            $this->nexRecord = $num;
+                $num = $rowCount - $this->recordLimit;
+                if($num < 0)
+                {
+                    $num = 0;
+                }
+                $this->nextRecord = $num;
 
-            $sql = "select * from data where channel = '$channel' limit 0, ".$this->recordLimit;
-            $db_rs = $this->database->prepare($sql);
-            $db_rs->execute();
-            
-            $rows = $db_rs->fetchAll(PDO::FETCH_ASSOC);
-            $data = array();
-            foreach($rows as $row)
-            {
-                $data[] = $row['data'];
+                $sql = "select * from data where channel = '$channel' limit 0, ".$this->recordLimit;
+                $db_rs = $this->database->prepare($sql);
+                $db_rs->execute();
+                
+                $rows = $db_rs->fetchAll(PDO::FETCH_ASSOC);
+                $data = array();
+                $dataIDs = array();
+                foreach($rows as $row)
+                {
+                    $data[] = json_decode($row['data']);
+                    $dataIDs[] = $row['data_id'];
+                }
+                if(!empty($dataIDs))
+                {
+                    $sql = "delete from data where data_id in(".implode(", ", $dataIDs).")";
+                    $db_rs = $this->database->prepare($sql);
+                    $db_rs->execute();
+                }
+                return json_encode(array("command"=>"message", "data"=>$data));
             }
-            return json_encode(array("command"=>"message", "data"=>$data));
+            else
+            {
+                return null;
+            }
         }
         catch(Exception $e)
         {
@@ -100,7 +117,7 @@ class Server extends MQServer{
 }
 
 $port = 8887;
-$server = new Server($port, dirname(__FILE__)."/.htpasswd");
-$server->showLog = false;
+$server = new Server($port, dirname(__FILE__)."/.htpasswd", true, true, "localhost", 3306, "message_broker", "root", "alto1234");
+$server->showLog = true;
 $server->run();
 ?>

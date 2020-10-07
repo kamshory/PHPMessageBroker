@@ -76,7 +76,6 @@ class MQSender
 				)
 			);
 			
-			echo "$message\r\n";
 			$this->log("Connection established \n");
 
 			//Send the message to the server
