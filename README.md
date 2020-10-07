@@ -67,7 +67,8 @@ $server->run();
 ```
 
 **_Construtor Parameters_**
-```
+
+```php
 MQServer(int $port, int $numberOfReceiver, String $userList, 
 [boolean $userFromFile])
 ```
@@ -211,14 +212,15 @@ $server->run();
 ```
 
 **_Construtor Parameters_**
-```
+
+```php
 MQServer(int $port, int $numberOfReceiver, String $userList, 
 [boolean $userFromFile, [boolean $keepData, String $dbHost, 
 int $dbPort, String $dbName, String $dbUser, String $dbPass]])
 ```
 
 1. `$port` is server port
-2. `$numberOfReceiver` number of receiver
+2. `$numberOfReceiver` number of receiver. If the number of receiver more than `$numberOfReceiver`, only first `$numberOfReceiver` will receive the message.
 3. `$userList` is pair of username and password separated by colon. For example:
 `"admin:$apr1$v07ls1hi$OayaxtrCFIHIzuhpaSL9/0"`
 If more than one user, separate by return (\r\n).
@@ -259,6 +261,29 @@ $sender->send($data, $channel);
 ?>
 ```
 
+**_Construtor Parameters_**
+
+```php
+MQSender(String $address, int $port, String $username, String $password)
+```
+
+1. `$address` is host name or IP address of the message broker server
+2. `$port` is port number of the message broker server
+3. `$username` is username of the sender 
+4. `$password` is password of the sender
+
+Note:
+The username of the sender and recipient does not have to be the same.
+
+**_Sending Message_**
+
+```php
+$sender->send(Object $data, String $channel);
+```
+
+1. `$data` is object or associated array. It will be encoded to JSONObject
+2. `$channel` is channel name. Receiver only will receive this message if receiver use same channel
+
 **Receiver**
 ```php
 <?php
@@ -292,3 +317,12 @@ $receiver->showLog = false;
 $receiver->run();
 ?>
 ```
+
+1. `$address` is host name or IP address of the message broker server
+2. `$port` is port number of the message broker server
+3. `$username` is username of the sender 
+4. `$password` is password of the sender
+5. `$channel` is channel name
+
+Note:
+The username of the sender and recipient does not have to be the same.
