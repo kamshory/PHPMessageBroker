@@ -1,3 +1,4 @@
+
 # PHPMessageBroker
 
 # Introduction
@@ -64,6 +65,19 @@ $server->showLog = false;
 $server->run();
 ?>
 ```
+
+**_Construtor Parameters_**
+```
+MQServer(int $port, int $numberOfReceiver, String $userList, 
+[boolean $userFromFile])
+```
+
+1. `$port` is server port
+2. `$numberOfReceiver`  number of receiver
+3. `$userList` is pair of username and password separated by colon. For example:
+`"admin:$apr1$v07ls1hi$OayaxtrCFIHIzuhpaSL9/0"`
+If more than one user, separate by return (\r\n).
+4. `$userFromFile` is indicate that `$userList` is file name instead of pair of username and password.
 
 **Server With Database**
 
@@ -195,6 +209,26 @@ $server->showLog = false;
 $server->run();
 ?>
 ```
+
+**_Construtor Parameters_**
+```
+MQServer(int $port, int $numberOfReceiver, String $userList, 
+[boolean $userFromFile, [boolean $keepData, String $dbHost, 
+int $dbPort, String $dbName, String $dbUser, String $dbPass]])
+```
+
+1. `$port` is server port
+2. `$numberOfReceiver` number of receiver
+3. `$userList` is pair of username and password separated by colon. For example:
+`"admin:$apr1$v07ls1hi$OayaxtrCFIHIzuhpaSL9/0"`
+If more than one user, separate by return (\r\n).
+4. `$userFromFile` is indicate that `$userList` is file name instead of pair of username and password.
+5. `$keepData` indicate that server will keep data until any receiver received the messages
+6. `$dbHost` is database host name or IP address
+7. `$dbPort` is database port number
+8. `$dbName` is database name
+9. `$dbUser` is database user
+10. `$dbPass` is database password 
 
 **Sender**
 ```php
