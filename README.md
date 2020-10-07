@@ -14,6 +14,8 @@ PHPMessageBroker is one of your choices. With a very easy installation and only 
 
 ![Topology](https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/topology.png)
 
+From image above, we can see that message sender (client 1) can send message to receiver (client 2). Both sender and receiver do not require public IP address.
+
 # User Credentials
 
 To generate user password, use tool like https://www.htaccesstools.com/htpasswd-generator/
