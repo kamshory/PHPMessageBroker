@@ -10,7 +10,7 @@ class MQServer{
 	protected $nexRecord = 0;
 	protected $keepData = false;
 
-	public function __construct($port = 8887, $numberOfReceiver = 1, $userList = null, $userFromFile = false)
+	public function __construct($port = 8887, $numberOfReceiver = 0, $userList = null, $userFromFile = false)
 	{
 		$this->port = $port;
 		if($numberOfReceiver < 0)
@@ -163,7 +163,7 @@ class MQServer{
 				{
 					$count++;
 					socket_write($receiver->socket, $message, strlen($message));
-					if($count >= $this->numberOfReceiver && $this->numberOfReceiver > 0)
+					if($this->numberOfReceiver > 0 && $count >= $this->numberOfReceiver)
 					{
 					break;
 					}

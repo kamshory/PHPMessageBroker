@@ -71,7 +71,7 @@ class Server extends MQServer{
     private $dbUser = null;
     private $dbPass = null;
     private $recordLimit = 5;
-    public function __construct($port = 8887, $numberOfReceiver = 1, $userList = null, $userFromFile = false, $keepData = false, $dbHost = null, $dbPort = null, $dbName = null, $dbUser = null, $dbPass = null)
+    public function __construct($port = 8887, $numberOfReceiver = 0, $userList = null, $userFromFile = false, $keepData = false, $dbHost = null, $dbPort = null, $dbName = null, $dbUser = null, $dbPass = null)
     {
         parent::__construct($port, $numberOfReceiver, $userList, $userFromFile);
         if($keepData)
