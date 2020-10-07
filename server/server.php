@@ -15,7 +15,8 @@ class Server extends MQServer{
     private $dbUser = null;
     private $dbPass = null;
     private $recordLimit = 5;
-    public function __construct($port = 8887, $numberOfReceiver = 1, $userList = null, $userFromFile = false, $keepData = false, $dbHost = null, $dbPort = null, $dbName = null, $dbUser = null, $dbPass = null)
+    public function __construct($port = 8887, $numberOfReceiver = 1, $userList = null, $userFromFile = false, 
+        $keepData = false, $dbHost = null, $dbPort = null, $dbName = null, $dbUser = null, $dbPass = null)
     {
         parent::__construct($port, $numberOfReceiver, $userList, $userFromFile);
         if($keepData)
@@ -67,7 +68,7 @@ class Server extends MQServer{
                 }
                 $this->nextRecord = $num;
 
-                $sql = "select * from data where channel = '$channel' limit 0, ".$this->recordLimit;
+                $sql = "select * from data where channel = '$channel' order by data_id asc limit 0, ".$this->recordLimit;
                 $db_rs = $this->database->prepare($sql);
                 $db_rs->execute();
                 
