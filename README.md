@@ -7,7 +7,9 @@ Sometime, you need a very lightweight message broker that would run on a system 
 
 Using a very light library is your choice because you don't want to sacrifice enormous resources for a very simple task. PHPMessageBroker is one of your choices. With a very easy installation and only using two server-side files, you can create a message broker that can forward messages from one client to another.
 
-PHPMessageBroker is 100% PHP. You can use MariaDB or MySQL database to ensure that message received to the receiver. However, you can use another DBMS by modifying a little of the sorce code. You can still use PHPMessageBroker without using a database. In this case, the message will only arrive if the recipient has connected to the server before sending the message. Once the message is received by the server, it will disappear immediately regardless of whether it arrives or not.
+PHPMessageBroker is 100% PHP. You can use MariaDB or MySQL database to ensure that message received to the receiver. However, you can use another DBMS by modifying a little of the sorce code. 
+
+You can still use PHPMessageBroker without using a database. In this case, the message will only be received if the recipient has connected to the server before sender send the message. Once the message is received by the server, it will disappear immediately regardless of whether it arrives or not.
 
 # Topolgy
 
