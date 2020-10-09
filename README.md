@@ -63,7 +63,6 @@ Your system topology can be as shown below
 
 ![Topology](https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/sms-gateway.png)
 
-
 # Example 
 
 **Server Without Database**
