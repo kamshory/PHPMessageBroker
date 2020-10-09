@@ -63,6 +63,8 @@ Your system topology can be as shown below
 
 ![Topology](https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/sms-gateway.png)
 
+Other applications are IoT and smart home application using Raspberry Pi and others.
+
 # Example 
 
 **Server Without Database**
