@@ -84,7 +84,7 @@ $server->run();
 ?>
 ```
 
-**_Construtor Parameters_**
+**_Constructor Parameters_**
 
 ```php
 MQServer(int $port, int $numberOfReceiver, String $userList, 
@@ -231,7 +231,7 @@ $server->run();
 ?>
 ```
 
-**_Construtor Parameters_**
+**_Constructor Parameters_**
 
 ```php
 MQServer(int $port, int $numberOfReceiver, String $userList, 
@@ -281,7 +281,7 @@ $sender->send($data, $channel);
 ?>
 ```
 
-**_Construtor Parameters_**
+**_Constructor Parameters_**
 
 ```php
 MQSender(String $address, int $port, String $username, String $password)
