@@ -338,6 +338,12 @@ $receiver->run();
 ?>
 ```
 
+**_Constructor Parameters_**
+
+```php
+Receiver($address, $port, $username, $password, $channel);
+```
+
 1. `$address` is the host name or IP address of the message broker server
 2. `$port` is the port number of the message broker server
 3. `$username` is the username of the sender 
