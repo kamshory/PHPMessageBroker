@@ -47,6 +47,23 @@ CREATE TABLE IF NOT EXISTS `data` (
 
 You can define the fields in the table yourself according to your needs, but if you want to save the data in JSON format then the structure above is enough.
 
+# Application
+
+Example application is SMS gateway server. If you want to build an OTP server for your small application. 
+
+Case
+
+1. Your application is on shared hosting or small VPS hosting
+2. You don't have any static IP address
+3. You wan't use SMS gateway provider (for any reason)
+4. You have an SMS gateway server and you want to put it on your home or your office
+5. You want to integrate the application server and SMS gateway server
+
+Your system topology can be as shown below
+
+![Topology](https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/sms-gateway.png)
+
+
 # Example 
 
 **Server Without Database**
