@@ -10,6 +10,13 @@ class MQServer{
 	protected $nexRecord = 0;
 	protected $keepData = false;
 
+	/**
+	 * Custructor
+	 * @param Int $port Port number.
+	 * @param Int $numberOfReceiver Maximum number of receiver.
+	 * @param String $userList User list. If $userFromFile is false, $userList is pairs of username and password.  If $userFromFile is true, $userList is fina path instad of pairs of username and password. 
+	 * @param Boolean $userFromFile Indicate that $userList is a file path instad of pairs of username and password.
+	 */
 	public function __construct($port = 8887, $numberOfReceiver = 0, $userList = null, $userFromFile = false)
 	{
 		$this->port = $port;
@@ -27,11 +34,19 @@ class MQServer{
 		}
 	}
 	
+	/**
+	 * Realod user list if the source of user list is file
+	 */
 	public function reloadUser()
 	{
 		$this->loadUser($this->userList);
 	}
 
+	/**
+	 * Load user list from file
+	 * @param String $userList User list
+	 * @param Boolean $userFromFile Indicate that user list is a file path
+	 */
 	private function loadUser($userList, $userFromFile)
 	{
 		if(!$userFromFile)
@@ -54,6 +69,10 @@ class MQServer{
 		}
 	}
 
+	/**
+	 * Remove client from array
+	 * @param Socket $readSock Client socket
+	 */
 	private function removeClients($readSock)
 	{
 		// remove client for $this->clients array
@@ -70,11 +89,21 @@ class MQServer{
 		unset($this->clients[$key]);
 	}
 
+	/**
+	 * Validate client
+	 * @param String $username Username
+	 * @param String $password Password
+	 */
 	private function validateUser($username, $password)
 	{
 		return \HTPasswd::auth($username, $password, $this->users);
 	}
 
+	/**
+	 * Check authorization
+	 * @param Socket $newsock Client socket
+	 * @param JSONObject $clientData Client data
+	 */
 	private function authorization($newsock, $clientData)
 	{
 		if(isset($clientData->command))
@@ -103,19 +132,29 @@ class MQServer{
 		return false;
 	}
 
-	private function replyPing($newsock, $data)
+	/**
+	 * Reply ping
+	 * @param Socket $newsock Client socket
+	 * @param String $requestMessage Request message
+	 */
+	private function replyPing($newsock, $requestMessage)
 	{
-		$clientData = json_decode($data);
-		$message = json_encode($clientData);
-		socket_write($newsock, $message, strlen($message));
+		$clientData = json_decode($requestMessage);
+		$responseMessage = json_encode($clientData);
+		socket_write($newsock, $responseMessage, strlen($responseMessage));
 	}
 
-	private function processData($readSock, $data)
+	/**
+	 * Process data
+	 * @param Socket $readSock Client socket
+	 * @param JSONObject $requestData Request message
+	 */
+	private function processData($readSock, $requestData)
 	{
-		$data = trim($data);
-		if(!empty($data))
+		$requestData = trim($requestData);
+		if(!empty($requestData))
 		{
-			$clientData = json_decode($data);
+			$clientData = json_decode($requestData);
 			if($clientData->type === "receiver" && $clientData->command == "register")
 			{
 				$channel = isset($clientData->channel)?$clientData->channel:'generic';
@@ -130,22 +169,26 @@ class MQServer{
 				{
 					do
 					{
-						$message = $this->loadFromDatabase($clientData->channel);
-						if($message !== null)
+						$responseMessage = $this->loadFromDatabase($clientData->channel);
+						if($responseMessage !== null)
 						{
-							socket_write($readSock, $message, strlen($message));
+							socket_write($readSock, $responseMessage, strlen($responseMessage));
 						}
 					}
 					while($this->nextRecord > 0);
 				}
 			}
-			else if($clientData->type === "sender" && $clientData->command == "message")
+			else if($clientData->type === "sender" && $clientData->command == "responseMessage")
 			{
 				$this->sendToReceivers($clientData);
 			}
 		}
 	}
 
+	/**
+	 * Send data to receivers
+	 * @param JSONObject $clientData Client data
+	 */
 	private function sendToReceivers($clientData)
 	{
 		if(count($this->receivers) == 0 && $this->keepData)
@@ -154,7 +197,7 @@ class MQServer{
 		}
 		else
 		{
-			$message = json_encode(array("command"=>"message", "data"=>array($clientData->data)));
+			$responseMessage = json_encode(array("command"=>"responseMessage", "data"=>array($clientData->data)));
 			$channel = isset($clientData->channel)?$clientData->channel:'generic';
 			$count = 0;
 			foreach ($this->receivers as $receiver) 
@@ -162,7 +205,7 @@ class MQServer{
 				if($receiver->channel == $channel)
 				{
 					$count++;
-					socket_write($receiver->socket, $message, strlen($message));
+					socket_write($receiver->socket, $responseMessage, strlen($responseMessage));
 					if($this->numberOfReceiver > 0 && $count >= $this->numberOfReceiver)
 					{
 					break;
@@ -172,6 +215,9 @@ class MQServer{
 		}
 	}
 
+	/**
+	 * Run server
+	 */
 	public function run()
 	{ 
 		$sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);   
@@ -230,7 +276,7 @@ class MQServer{
 
 	/**
 	 * Load channel data from database
-	 * @return String eesage to be sent to the client or null if data not exists
+	 * @param String $channel Channel name
 	 */
 	public function loadFromDatabase($channel)
 	{
@@ -239,11 +285,19 @@ class MQServer{
 		return null;
 	}
 
+	/**
+	 * Save data client data to database
+	 * @param JSONObject $clientData Client data
+	 */
 	public function saveToDatabase($clientData)
 	{
 		// Save to database
 	}
 
+	/**
+	 * Create log
+	 * @param String $text Text to be logged
+	 */
 	protected function log($text)
 	{
 		if($this->showLog)
