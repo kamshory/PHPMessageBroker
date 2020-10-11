@@ -360,7 +360,8 @@ $receiver->run();
 ?>
 ```
 
-You can also pass channel name when invoke `run` method. For example:
+You can also pass channel name when invoke `run` method. 
+For example:
 
 ```php
 <?php
