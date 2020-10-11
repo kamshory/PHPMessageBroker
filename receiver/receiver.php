@@ -10,6 +10,8 @@ class Receiver extends MQReceiver{
 	{
 		global $i;
 		global $j;
+		echo $message;
+		/*
 		$object = json_decode($message);
 		$rows = $object->data;
 		$i++;
@@ -19,6 +21,7 @@ class Receiver extends MQReceiver{
 			echo "Time     : ".date('j F Y H:i:s', $data->time)."\r\nReceiver : ".$data->receiver."\r\nMessage  : ".$data->message."\r\n\r\n";
 			//echo "i = $i | j = $j\r\n";
 		}
+		*/
 	}
 }
 $i = 0;

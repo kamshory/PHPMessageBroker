@@ -9,6 +9,8 @@ class MQSender
 	private $password = null;
 	public $connected = false;
 	private $clientID = "";
+	protected $chunk = 1024;
+	protected $bitDepth = 4;
 
 	/**
 	 * Constructor
@@ -33,18 +35,18 @@ class MQSender
 	{
 		$this->clientID = uniqid().time();
 		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
-			$errorcode = socket_last_error();
-			$errormsg = socket_strerror($errorcode);
-			$this->log("Couldn't create socket: [$errorcode] $errormsg \n");
+			$this->errorcode = socket_last_error();
+			$this->errormsg = socket_strerror($this->errorcode);
+			$this->log("Couldn't create socket: [$this->errorcode] $this->errormsg \n");
 		}
 
 		$this->log("Socket created \n");
 
 		//Connect socket to remote address
 		if(!socket_connect($this->socket, $this->address, $this->port)) {
-			$errorcode = socket_last_error();
-			$errormsg = socket_strerror($errorcode);
-			$this->log("Could not connect: [$errorcode] $errormsg \n");
+			$this->errorcode = socket_last_error();
+			$this->errormsg = socket_strerror($this->errorcode);
+			$this->log("Could not connect: [$this->errorcode] $this->errormsg \n");
 		}
 		if($this->socket != null)
 		{
@@ -77,12 +79,10 @@ class MQSender
 			'authorization'=>base64_encode($username.':'.$password)
 			)
 		);
-		if(!socket_send($this->socket, $message, strlen($message), 0)) 
+		
+		if(!$this->sendSocket($this->socket, $message)) 
 		{
-			$errorcode = socket_last_error();
-			$errormsg = socket_strerror($errorcode);
-
-			$this->log("Could not send data: [$errorcode] $errormsg \n");
+			$this->log("Could not send data: [$this->errorcode] $this->errormsg \n");
 			$this->connected = false;
 			return false;
 		}
@@ -113,11 +113,9 @@ class MQSender
 				)
 			);
 			//Send the message to the address
-			if(!socket_send($this->socket, $message, strlen($message), 0)) 
+			if(!$this->sendSocket($this->socket, $message)) 
 			{
-				$errorcode = socket_last_error();
-				$errormsg = socket_strerror($errorcode);
-				$this->log("Could not send data: [$errorcode] $errormsg \n");
+				$this->log("Could not send data: [$this->errorcode] $this->errormsg \n");
 				return false;
 			}
 			$this->log("Message send successfully \n");
@@ -125,6 +123,102 @@ class MQSender
 			return true;
 		}
 		return false;
+	}
+
+	private function writeSocket($readSock, $data)
+	{
+		$length = strlen($data);
+		$header = $this->createHeader($length);
+		$chunks = $this->chunkSplit($data, $this->chunk);
+		socket_write($readSock, $header, strlen($header));
+		foreach($chunks as $message)
+		{
+			socket_write($readSock, $message, strlen($message));
+		}
+		$this->errorcode = socket_last_error();
+		$this->errormsg = socket_strerror($this->errorcode);
+		return ($this->errorcode == 0);
+	}
+
+	private function sendSocket($readSock, $data)
+	{
+		$length = strlen($data);
+		$header = $this->createHeader($length);
+		$chunks = $this->chunkSplit($data, $this->chunk);
+		socket_send($readSock, $header, strlen($header), 0);
+		foreach($chunks as $message)
+		{
+			socket_send($readSock, $message, strlen($message), 0);
+		}
+		$this->errorcode = socket_last_error();
+		$this->errormsg = socket_strerror($this->errorcode);
+		return ($this->errorcode == 0);
+
+	}
+
+	function chunkSplit($data, $chunk)
+	{
+		$result = array();
+		$length =strlen($data);
+		$x = ceil(strlen($data) / $chunk);
+		for($i = 0, $j = 1; $i<$length; $i+=$chunk, $j++)
+		{
+			if($j < $x)
+			{
+				$result[] = substr($data, $i, $chunk);
+			}
+			else
+			{
+				$result[] = substr($data, $i);
+			}
+		}
+		return $result;
+	}
+
+	private function createHeader($length)
+	{
+		$hex = sprintf("%x", $length);
+		if((strlen($hex) % 2) == 1)
+		{
+			$hex = "0".$hex;
+		}
+		$ln = strlen($hex);
+		$header = "";
+		for($i = 0; $i<$ln; $i+=2)
+		{
+			$header .= substr($hex, $i, 2);
+		}
+		while(strlen($header) < ($this->bitDepth * 2))
+		{
+			$header = "0".$header;
+		}
+		return $header;
+	}
+
+	private function parseHeader($header)
+	{
+		if(strlen($header) % 2 == 1)
+		{
+			// add 0
+			$len2 = strlen($header);
+			$len3 = $len2 - 1;
+			$sub1 = substr($header, 0, $len3);
+			$sub2 = substr($header, $len3);
+			if(strlen($sub2) == 1)
+			{
+				$sub2 = "0".$sub2;
+			}
+			$header = $sub1.$sub2;
+		}
+		$len = strlen($header);
+		$length = 0;
+		for($i = 0; $i<$len; $i+=2)
+		{
+			$length = $length * 256;
+			$hex = substr($header, $i, 2);
+			$length += hexdec($hex);
+		}
+		return $length;
 	}
 
 	/**

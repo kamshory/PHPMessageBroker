@@ -119,6 +119,6 @@ class Server extends MQServer{
 
 $port = 8887;
 $server = new Server($port, 0, dirname(__FILE__)."/.htpasswd", true, true, "localhost", 3306, "message_broker", "root", "alto1234");
-$server->showLog = false;
+$server->showLog = true;
 $server->run();
 ?>

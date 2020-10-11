@@ -6,6 +6,8 @@ class MQReceiver{
 	private $port = 8887;
 	private $channel = 'generic';
 	private $clientID = '';
+	protected $chunk = 1024;
+	protected $bitDepth = 4;
 
 	/**
 	 * Constructor
@@ -32,6 +34,7 @@ class MQReceiver{
 	{
 		$this->clientID = uniqid().time();
 		$this->errorcode = '';
+		$this->socket = null;
 		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
 			$this->errorcode = socket_last_error();
 			$this->errormsg = socket_strerror($this->errorcode);
@@ -73,7 +76,7 @@ class MQReceiver{
 			'authorization'=>base64_encode($this->username.':'.$this->password)
 			)
 		);
-		if(!socket_send($this->socket, $message, strlen($message), 0)) 
+		if(!$this->sendSocket($this->socket, $message)) 
 		{
 			$this->errorcode = socket_last_error();
 			$this->errormsg = socket_strerror($this->errorcode);
@@ -81,6 +84,108 @@ class MQReceiver{
 			$this->log("Could not send data: [$this->errorcode] $this->errormsg \n");
 		}
 		usleep(100000);
+	}
+
+	private function writeSocket($readSock, $data)
+	{
+		$length = strlen($data);
+		$header = $this->createHeader($length);
+		$chunks = $this->chunkSplit($data, $this->chunk);
+		print_r($chunks);
+		echo "HEADER1 = $header\r\n";
+		socket_write($readSock, $header, strlen($header));
+		foreach($chunks as $message)
+		{
+			socket_write($readSock, $message, strlen($message));
+		}
+		$this->errorcode = socket_last_error();
+		$this->errormsg = socket_strerror($this->errorcode);
+		return ($this->errorcode == 0);
+	}
+
+	private function sendSocket($readSock, $data)
+	{
+		$length = strlen($data);
+		$header = $this->createHeader($length);
+		echo "HEADER2 = $header\r\n";
+		$chunks = $this->chunkSplit($data, $this->chunk);
+		print_r($chunks);
+		socket_send($readSock, $header, strlen($header), 0);
+		foreach($chunks as $message)
+		{
+			echo "Send $message\r\n";
+			socket_send($readSock, $message, strlen($message), 0);
+		}
+		$this->errorcode = socket_last_error();
+		$this->errormsg = socket_strerror($this->errorcode);
+		return ($this->errorcode == 0);
+
+	}
+
+	function chunkSplit($data, $chunk)
+	{
+		$result = array();
+		$length =strlen($data);
+		$x = ceil(strlen($data) / $chunk);
+		for($i = 0, $j = 1; $i<$length; $i+=$chunk, $j++)
+		{
+			echo "i = $i\r\n";
+			if($j < $x)
+			{
+				$result[] = substr($data, $i, $chunk);
+			}
+			else
+			{
+				$result[] = substr($data, $i);
+			}
+		}
+		return $result;
+	}
+
+	private function createHeader($length)
+	{
+		$hex = sprintf("%x", $length);
+		if((strlen($hex) % 2) == 1)
+		{
+			$hex = "0".$hex;
+		}
+		$ln = strlen($hex);
+		$header = "";
+		for($i = 0; $i<$ln; $i+=2)
+		{
+			$header .= substr($hex, $i, 2);
+		}
+		while(strlen($header) < ($this->bitDepth * 2))
+		{
+			$header = "0".$header;
+		}
+		return $header;
+	}
+
+	private function parseHeader($header)
+	{
+		if(strlen($header) % 2 == 1)
+		{
+			// add 0
+			$len2 = strlen($header);
+			$len3 = $len2 - 1;
+			$sub1 = substr($header, 0, $len3);
+			$sub2 = substr($header, $len3);
+			if(strlen($sub2) == 1)
+			{
+				$sub2 = "0".$sub2;
+			}
+			$header = $sub1.$sub2;
+		}
+		$len = strlen($header);
+		$length = 0;
+		for($i = 0; $i<$len; $i+=2)
+		{
+			$length = $length * 256;
+			$hex = substr($header, $i, 2);
+			$length += hexdec($hex);
+		}
+		return $length;
 	}
 	
 	/**
@@ -119,7 +224,7 @@ class MQReceiver{
 						'id' => $this->clientID,
 						'channel'=>$this->channel					
 					));
-					if(!socket_send($this->socket, $message, strlen($message), 0)) {
+					if(!$this->sendSocket($this->socket, $message)) {
 						$this->errorcode = socket_last_error();
 						$this->errormsg = socket_strerror($this->errorcode);
 						$this->log("Could not send data: [$this->errorcode] $this->errormsg \n");
@@ -127,14 +232,30 @@ class MQReceiver{
 					}
 					do
 					{
-						$data = @socket_read($this->socket, 8192,  PHP_BINARY_READ);
+						$data = @socket_read($this->socket, $this->bitDepth,  PHP_BINARY_READ);
 						if($data === false)
 						{
 							continue 2;
 						}
 						if($data !== null)
 						{
-							$this->processMessage($data);
+							$length = $this->parseHeader($data);
+							if($length > 0)
+							{
+								$incommingMessage = "";
+								$i = 0;	
+								$buff = "";
+								do
+								{
+									$buff = socket_read($newsock, $this->chunk, PHP_BINARY_READ);
+									$incommingMessage .= $buff;
+									$i += $this->chunk;
+								}
+								while($i < $length && $buff !== null);
+								echo "Incomming $incommingMessage\r\n";
+								$this->log("Receipt new connection...\r\n");
+								$this->processMessage($incommingMessage);
+							}
 						}
 
 					}

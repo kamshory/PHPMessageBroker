@@ -9,6 +9,8 @@ class MQServer{
 	private $receivers = null;
 	protected $nexRecord = 0;
 	protected $keepData = false;
+	protected $chunk = 1024;
+	protected $bitDepth = 4;
 
 	/**
 	 * Custructor
@@ -106,6 +108,7 @@ class MQServer{
 	 */
 	private function authorization($newsock, $clientData)
 	{
+		print_r($clientData);
 		if(isset($clientData->command))
 		{
 			if($clientData->command == 'login')
@@ -141,7 +144,7 @@ class MQServer{
 	{
 		$clientData = json_decode($requestMessage);
 		$responseMessage = json_encode($clientData);
-		socket_write($newsock, $responseMessage, strlen($responseMessage));
+		$this->writeSocket($newsock, $responseMessage);
 	}
 
 	/**
@@ -172,7 +175,10 @@ class MQServer{
 						$responseMessage = $this->loadFromDatabase($clientData->channel);
 						if($responseMessage !== null)
 						{
-							socket_write($readSock, $responseMessage, strlen($responseMessage));
+							$this->writeSocket($readSock, $responseMessage);
+							/**
+							 * socket_write($readSock, $responseMessage, strlen($responseMessage));
+							 */
 						}
 					}
 					while($this->nextRecord > 0);
@@ -205,7 +211,7 @@ class MQServer{
 				if($receiver->channel == $channel)
 				{
 					$count++;
-					socket_write($receiver->socket, $responseMessage, strlen($responseMessage));
+					$this->writeSocket($receiver->socke, $responseMessage);
 					if($this->numberOfReceiver > 0 && $count >= $this->numberOfReceiver)
 					{
 					break;
@@ -213,6 +219,84 @@ class MQServer{
 				}
 			}			
 		}
+	}
+
+	private function writeSocket($readSock, $data)
+	{
+		$length = strlen($data);
+		$header = $this->createHeader($length);
+		$chunks = $this->chunkSplit($data, $this->chunk);
+		socket_write($readSock, $header, strlen($header));
+		foreach($chunks as $message)
+		{
+			socket_write($readSock, $message, strlen($message));
+		}
+
+	}
+
+	function chunkSplit($data, $chunk)
+	{
+		$result = array();
+		$length =strlen($data);
+		$x = ceil(strlen($data) / $chunk);
+		for($i = 0, $j = 1; $i<$length; $i+=$chunk, $j++)
+		{
+			if($j < $x)
+			{
+				$result[] = substr($data, $i, $chunk);
+			}
+			else
+			{
+				$result[] = substr($data, $i);
+			}
+		}
+		return $result;
+	}
+
+	private function createHeader($length)
+	{
+		$hex = sprintf("%x", $length);
+		if((strlen($hex) % 2) == 1)
+		{
+			$hex = "0".$hex;
+		}
+		$ln = strlen($hex);
+		$header = "";
+		for($i = 0; $i<$ln; $i+=2)
+		{
+			$header .= substr($hex, $i, 2);
+		}
+		while(strlen($header) < ($this->bitDepth * 2))
+		{
+			$header = "0".$header;
+		}
+		return $header;
+	}
+
+	private function parseHeader($header)
+	{
+		if(strlen($header) % 2 == 1)
+		{
+			// add 0
+			$len2 = strlen($header);
+			$len3 = $len2 - 1;
+			$sub1 = substr($header, 0, $len3);
+			$sub2 = substr($header, $len3);
+			if(strlen($sub2) == 1)
+			{
+				$sub2 = "0".$sub2;
+			}
+			$header = $sub1.$sub2;
+		}
+		$len = strlen($header);
+		$length = 0;
+		for($i = 0; $i<$len; $i+=2)
+		{
+			$length = $length * 256;
+			$hex = substr($header, $i, 2);
+			$length += hexdec($hex);
+		}
+		return $length;
 	}
 
 	/**
@@ -229,7 +313,7 @@ class MQServer{
 		do
 		{
 			$this->read = $this->clients;
-			if (socket_select($this->read, $write = NULL, $except = NULL, 0) < 1)
+			if(socket_select($this->read, $write = NULL, $except = NULL, 0) < 1)
 			{
 				continue;
 			}
@@ -239,7 +323,7 @@ class MQServer{
 				socket_getpeername($newsock, $ip);
 				$key = array_search($sock, $this->read);
 				unset($this->read[$key]);
-				$data = @socket_read($newsock, 8192,  PHP_BINARY_READ);
+				$data = @socket_read($newsock, 8,  PHP_BINARY_READ);
 				if ($data === false) 
 				{
 					$this->removeClients($newsock);
@@ -250,25 +334,65 @@ class MQServer{
 					$data = trim($data);
 					if(!empty($data))
 					{
-						$clientData = json_decode($data);
-						$this->log("Receipt new connection...\r\n");
-						if(!$this->authorization($newsock, $clientData))
+						echo "HEADER X = $data\r\n";
+						$length = $this->parseHeader($data);
+						if($length > 0)
 						{
-							$this->removeClients($newsock);
-							continue;
+							$incommingMessage = "";
+							$i = 0;	
+							$buff = "";
+							while($i < $length && $buff !== null)
+							{
+								$buff = socket_read($newsock, $this->chunk, PHP_BINARY_READ);
+								$incommingMessage .= $buff;
+								$i += strlen($buff);
+								if($i == $length)
+								{
+								break 1;
+								}
+							}
+							
+							echo "$i | $incommingMessage\r\n";
+							$clientData = json_decode($incommingMessage);
+							$this->log("Receipt new connection...\r\n");
+							if(!$this->authorization($newsock, $clientData))
+							{
+								$this->removeClients($newsock);
+								echo "Invalid\r\n";
+								continue;
+							}
+							else
+							{
+								echo "Logged in\r\n";
+							}
 						}
 					}
 				}
 			}		   
 			foreach($this->read as $readSock) 
 			{
-				$data = @socket_read($readSock, 8192,  PHP_BINARY_READ);
+				$data = @socket_read($readSock, 8,  PHP_BINARY_READ);
+				var_dump($data);
 				if ($data === false) 
 				{
 					$this->removeClients($readSock);
 					continue;
 				}
-				$this->processData($readSock, $data);				
+				$length = $this->parseHeader($data);
+				if($length > 0)
+				{
+					$incommingMessage = "";
+					$i = 0;	
+					do
+					{
+						$buff = socket_read($newsock, $this->chunk, PHP_BINARY_READ);
+						$incommingMessage .= $buff;
+						$i += $this->chunk;
+					}
+					while($i < $length);
+					$this->processData($readSock, $incommingMessage);	
+					echo "incommingMessage = $incommingMessage\r\n";
+				}			
 			}
 		}
 		while(true);
