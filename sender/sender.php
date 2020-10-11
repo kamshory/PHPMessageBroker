@@ -12,24 +12,26 @@ $password = 'Albasiko2020^';
 $sender = new MQSender($address, $port, $username, $password);
 $sender->connect();
 
-$data = array(
-	'id'=>uniqid(),
-	'time' => time(0),
-	'receiver'=>'+6281200000000',
-	'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
-);
 
 $channel = 'sms';
 $sender->showLog = false;
-for($i = 0; $i < 100; $i++)
+for($i = 0; $i < 1000; $i++)
 {
-if(!$sender->send($data, $channel))
-{
-	//echo "Failed\r\n";
-}
-else
-{
-	//echo "Success\r\n";
-}
+
+	$data = array(
+		'id'=>uniqid(),
+		'time' => time(0),
+		'receiver'=>'+6281200000000',
+		'message'=>"Kode OTP Anda adalah ".mt_rand(100000, 999999)."\r\n>>>Jangan memberitahukan kode ini kepada siapapun<<<"
+	);
+	
+	if(!$sender->send($data, $channel))
+	{
+		//echo "Failed\r\n";
+	}
+	else
+	{
+		//echo "Success\r\n";
+	}
 }
 ?>
