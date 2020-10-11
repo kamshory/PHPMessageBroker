@@ -339,7 +339,7 @@ class Receiver extends MQReceiver{
 		$i++;
 		foreach($rows as $idx=>$data)
 		{
-			$j++;
+            $j++;
             echo "Time     : ".date('j F Y H:i:s', $data->time)
             ."\r\nReceiver : ".$data->receiver
             ."\r\nMessage  : ".$data->message."\r\n\r\n";
@@ -380,7 +380,7 @@ class Receiver extends MQReceiver{
 		$i++;
 		foreach($rows as $idx=>$data)
 		{
-			$j++;
+            $j++;
             echo "Time     : ".date('j F Y H:i:s', $data->time)
             ."\r\nReceiver : ".$data->receiver
             ."\r\nMessage  : ".$data->message."\r\n\r\n";
