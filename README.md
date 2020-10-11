@@ -343,7 +343,7 @@ class Receiver extends MQReceiver{
             echo "Time     : ".date('j F Y H:i:s', $data->time)
             ."\r\nReceiver : ".$data->receiver
             ."\r\nMessage  : ".$data->message."\r\n\r\n";
-			//echo "i = $i | j = $j\r\n";
+            //echo "i = $i | j = $j\r\n";
 		}
 	}
 }
@@ -384,7 +384,7 @@ class Receiver extends MQReceiver{
             echo "Time     : ".date('j F Y H:i:s', $data->time)
             ."\r\nReceiver : ".$data->receiver
             ."\r\nMessage  : ".$data->message."\r\n\r\n";
-			//echo "i = $i | j = $j\r\n";
+            //echo "i = $i | j = $j\r\n";
 		}
 	}
 }
