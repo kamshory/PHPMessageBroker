@@ -1,22 +1,36 @@
 <?php
 class MQSender
 {	
-	private $server = '127.0.0.1';
+	private $address = '127.0.0.1';
 	private $port = 8889;
 	public $showLog = false;
 	private $socket = null;
 	private $username = null;
 	private $password = null;
-	public function __construct($server = "127.0.0.1", $port = 8889, $username = '', $password = '')
+	public $connected = false;
+
+	/**
+	 * Constructor
+	 * @param String $address Server address
+	 * @param Int $port Port number
+	 * @param String $username Ursename
+	 * @param String $password Password
+	 */
+	public function __construct($address = "127.0.0.1", $port = 8889, $username = '', $password = '')
 	{
 		set_time_limit(0);
-		$this->server = $server;
+		$this->address = $address;
 		$this->port = $port;
 		$this->username = $username;
 		$this->password = $password;
-		$this->connect();
-		$this->login($this->username, $this->password);
 	}
+
+	/**
+	 * Login
+ 	 * @param String $username Ursename
+	 * @param String $password Password
+	 * @return Boolean true if success, false if failed
+	 */
 
 	private function login($username, $password)
 	{
@@ -37,11 +51,18 @@ class MQSender
 			$errormsg = socket_strerror($errorcode);
 
 			$this->log("Could not send data: [$errorcode] $errormsg \n");
+			$this->connected = false;
+			return false;
 		}
+		$this->connected = true;
 		usleep(10000);
+		return true;
 	}
 
-	private function connect()
+	/**
+	 * Connect to the server
+	 */
+	public function connect()
 	{
 		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
 			$errorcode = socket_last_error();
@@ -51,22 +72,36 @@ class MQSender
 
 		$this->log("Socket created \n");
 
-		//Connect socket to remote server
-		if(!socket_connect($this->socket, $this->server, $this->port)) {
+		//Connect socket to remote address
+		if(!socket_connect($this->socket, $this->address, $this->port)) {
 			$errorcode = socket_last_error();
 			$errormsg = socket_strerror($errorcode);
 			$this->log("Could not connect: [$errorcode] $errormsg \n");
 		}
-	}
-
-	public function send($data, $channel)
-	{
-		if($this->socket == null)
+		if($this->socket != null)
 		{
-			$this->connect();
-			$this->login($this->username, $this->password);
+			return $this->login($this->username, $this->password);
 		}
 		else
+		{
+			$this->connected = false;
+			return false;
+		}
+	}
+
+	/**
+	 * Send data to server
+	 * @param Object $data Data to be send
+	 * @param String $channel Channel name
+	 * @return Boolean true if success, false if failed
+	 */
+	public function send($data, $channel)
+	{
+		if(!$this->connected)
+		{
+			$this->connect();
+		}
+		if($this->connected)
 		{
 			$message = json_encode(array(
 				'command' => 'message',
@@ -75,22 +110,25 @@ class MQSender
 				'data'=>$data
 				)
 			);
-			
-			$this->log("Connection established \n");
-
-			//Send the message to the server
+			//Send the message to the address
 			if(!socket_send($this->socket, $message, strlen($message), 0)) 
 			{
 				$errorcode = socket_last_error();
 				$errormsg = socket_strerror($errorcode);
-
 				$this->log("Could not send data: [$errorcode] $errormsg \n");
+				return false;
 			}
 			$this->log("Message send successfully \n");
 			usleep(10000);
+			return true;
 		}
+		return false;
 	}
 
+	/**
+	 * Log
+	 * @param String $text Text to be logged
+	 */
 	private function log($text)
 	{
 		if($this->showLog)

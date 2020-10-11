@@ -11,6 +11,10 @@ PHPMessageBroker is 100% PHP. You can use MariaDB or MySQL database to ensure th
 
 You can still use PHPMessageBroker without using a database. In this case, the message will only be received if the recipient has connected to the server before sender send the message. Once the message is received by the server, it will disappear immediately regardless of whether it arrives or not.
 
+# Requirement
+
+No external libraries required. On Windows operating system, make sure tha the `extension=php_sockets.dll` is uncommented.
+
 # Topolgy
 
 ![Topology](https://raw.githubusercontent.com/kamshory/PHPMessageBroker/main/topology.png)
@@ -46,6 +50,8 @@ CREATE TABLE IF NOT EXISTS `data` (
 ```
 
 You can define the fields in the table yourself according to your needs, but if you want to save the data in JSON format then the structure above is enough.
+
+If you use the database to store the message, server will load message from the database and send it to the receiver after login successfully.
 
 # Application
 

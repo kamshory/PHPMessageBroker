@@ -178,7 +178,7 @@ class MQServer{
 					while($this->nextRecord > 0);
 				}
 			}
-			else if($clientData->type === "sender" && $clientData->command == "responseMessage")
+			else if($clientData->type === "sender" && $clientData->command == "message")
 			{
 				$this->sendToReceivers($clientData);
 			}
@@ -197,7 +197,7 @@ class MQServer{
 		}
 		else
 		{
-			$responseMessage = json_encode(array("command"=>"responseMessage", "data"=>array($clientData->data)));
+			$responseMessage = json_encode(array("command"=>"message", "data"=>array($clientData->data)));
 			$channel = isset($clientData->channel)?$clientData->channel:'generic';
 			$count = 0;
 			foreach ($this->receivers as $receiver) 
@@ -251,6 +251,7 @@ class MQServer{
 					if(!empty($data))
 					{
 						$clientData = json_decode($data);
+						$this->log("Receipt new connection...\r\n");
 						if(!$this->authorization($newsock, $clientData))
 						{
 							$this->removeClients($newsock);

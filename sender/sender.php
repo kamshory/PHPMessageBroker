@@ -10,6 +10,7 @@ $port = 8887;
 $username = 'manager';
 $password = 'Albasiko2020^';
 $sender = new MQSender($address, $port, $username, $password);
+$sender->connect();
 
 $data = array(
 	'id'=>uniqid(),
@@ -20,5 +21,15 @@ $data = array(
 
 $channel = 'sms';
 $sender->showLog = false;
-$sender->send($data, $channel);
+for($i = 0; $i < 100; $i++)
+{
+if(!$sender->send($data, $channel))
+{
+	//echo "Failed\r\n";
+}
+else
+{
+	//echo "Success\r\n";
+}
+}
 ?>

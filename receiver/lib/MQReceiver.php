@@ -2,21 +2,66 @@
 
 class MQReceiver{
 	public $showLog = true;
-	private $server = '127.0.0.1';
+	private $address = '127.0.0.1';
 	private $port = 8887;
 	private $channel = 'generic';
 	private $clientID = '';
-	public function __construct($server = "127.0.0.1", $port = 8887, $username = '', $password = '', $channel = 'generic')
+
+	/**
+	 * Constructor
+	 * @param String $address Server address
+	 * @param Int $port Port number
+	 * @param String $username Ursename
+	 * @param String $password Password
+	 * @param String $channel Channel name
+	 */
+	public function __construct($address = "127.0.0.1", $port = 8887, $username = '', $password = '', $channel = 'generic')
 	{
-		$this->server = $server;
+		set_time_limit(0);
+		$this->address = $address;
 		$this->port = $port;
 		$this->channel = $channel;
 		$this->username = $username;
 		$this->password = $password;
-		$this->clientID = uniqid().time();
 	}
-	private function login($username, $password)
+
+	/**
+	 * Connect to server
+	 */
+	private function connect()
 	{
+		$this->clientID = uniqid().time();
+		$this->errorcode = '';
+		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
+			$this->errorcode = socket_last_error();
+			$this->errormsg = socket_strerror($this->errorcode);
+			$this->log("Couldn't create socket: [$this->errorcode] $this->errormsg \n");
+		}
+
+		$this->log("Socket created \n");
+
+		if(!socket_connect($this->socket, $this->address, $this->port)) {
+			$this->errorcode = socket_last_error();
+			$this->errormsg = socket_strerror($this->errorcode);
+			$this->log("Could not connect: [$this->errorcode] $this->errormsg \n");
+		}
+	}
+
+	/**
+	 * Login to server
+	 * @param String $username Ursename
+	 * @param String $password Password
+	 */
+	private function login($username = null, $password = null)
+	{
+		if($username !== null)
+		{
+			$this->username = $username;
+		}
+		if($password !== null)
+		{
+			$this->password = $password;
+		}
 		if($this->socket == null)
 		{
 			$this->connect();
@@ -25,44 +70,38 @@ class MQReceiver{
 			'id' => $this->clientID,
 			'command' => 'login',
 			'type' => 'receiver', 
-			'authorization'=>base64_encode($username.':'.$password)
+			'authorization'=>base64_encode($this->username.':'.$this->password)
 			)
 		);
 		if(!socket_send($this->socket, $message, strlen($message), 0)) 
 		{
 			$this->errorcode = socket_last_error();
-			$errormsg = socket_strerror($this->errorcode);
+			$this->errormsg = socket_strerror($this->errorcode);
 
-			$this->log("Could not send data: [$this->errorcode] $errormsg \n");
+			$this->log("Could not send data: [$this->errorcode] $this->errormsg \n");
 		}
 		usleep(100000);
 	}
 	
+	/**
+	 * Process message
+	 * @param String $data Message received
+	 */
 	public function processMessage($data)
 	{
 		// define your code here or on your extend class
 	}
 
-	private function connect()
+	/**
+	 * Run the receiver process
+	 * @param String $channel Channel name
+	 */
+	public function run($channel = null)
 	{
-		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
-			$this->errorcode = socket_last_error();
-			$errormsg = socket_strerror($this->errorcode);
-			$this->log("Couldn't create socket: [$this->errorcode] $errormsg \n");
+		if($channel !== null)
+		{
+			$this->channel = $channel;
 		}
-
-		$this->log("Socket created \n");
-
-		if(!socket_connect($this->socket, $this->server, $this->port)) {
-			$this->errorcode = socket_last_error();
-			$errormsg = socket_strerror($this->errorcode);
-			$this->log("Could not connect: [$this->errorcode] $errormsg \n");
-		}
-	}
-
-	public function run()
-	{
-		set_time_limit(0);
 		do
 		{
 			$this->socket = null;
@@ -82,8 +121,8 @@ class MQReceiver{
 					));
 					if(!socket_send($this->socket, $message, strlen($message), 0)) {
 						$this->errorcode = socket_last_error();
-						$errormsg = socket_strerror($this->errorcode);
-						$this->log("Could not send data: [$this->errorcode] $errormsg \n");
+						$this->errormsg = socket_strerror($this->errorcode);
+						$this->log("Could not send data: [$this->errorcode] $this->errormsg \n");
 						continue;
 					}
 					do
@@ -95,10 +134,6 @@ class MQReceiver{
 						}
 						if($data !== null)
 						{
-							if($this->errorcode)
-							{
-								$this->log("Could not read data: [$this->errorcode] $errormsg \n");
-							}
 							$this->processMessage($data);
 						}
 
@@ -114,6 +149,10 @@ class MQReceiver{
 		while(true);
 	}
 
+	/**
+	 * Log
+	 * @param String $text Text to be logged
+	 */
 	private function log($text)
 	{
 		if($this->showLog)

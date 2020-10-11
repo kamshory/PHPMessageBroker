@@ -3,6 +3,12 @@ class HTPasswd
 {
     const APRMD5_ALPHABET = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+    /**
+     * Hash plain text
+     * @param String $mdp Plain text
+     * @param String $salt Salt of hash
+     */
     public static function hash($mdp, $salt = null)
     {
         if (is_null($salt))
@@ -51,7 +57,9 @@ class HTPasswd
         $hash = strtr(strrev(substr(base64_encode($hash) , 2)) , self::BASE64_ALPHABET, self::APRMD5_ALPHABET);
         return '$apr1$' . $salt . '$' . $hash;
     }
-    // 8 character salts are the best. Don't encourage anything but the best.
+    /**
+     * Salt. 8 character salts are the best. Don't encourage anything but the best.
+     */ 
     public static function salt()
     {
         $alphabet = self::APRMD5_ALPHABET;
@@ -63,16 +71,33 @@ class HTPasswd
         }
         return $salt;
     }
+
+    /**
+     * Check password
+     * @param String $plain Plain text
+     * @param String $hash Hash
+     */
     public static function check($plain, $hash)
     {
         $parts = explode('$', $hash);
         return self::hash($plain, $parts[2]) === $hash;
     }
+
+    /**
+     * Encrypt password using SHA1
+     * @param String $password Password
+     */
     public static function crypt_sha1($password)
     {
         return "{SHA}" . base64_encode(hex2bin(sha1($password)));
     }
 
+    /**
+     * Check authorization
+     * @param String $username Username
+     * @param String $password Password
+     * @param String $stored The pairs of username and password stored on the configuration, file, or database
+     */
     public static function auth($username, $password, $stored)
     {
         $buff = $stored;
