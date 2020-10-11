@@ -8,6 +8,7 @@ class MQSender
 	private $username = null;
 	private $password = null;
 	public $connected = false;
+	private $clientID = "";
 
 	/**
 	 * Constructor
@@ -26,44 +27,11 @@ class MQSender
 	}
 
 	/**
-	 * Login
- 	 * @param String $username Ursename
-	 * @param String $password Password
-	 * @return Boolean true if success, false if failed
-	 */
-
-	private function login($username, $password)
-	{
-		if($this->socket == null)
-		{
-			$this->connect();
-		}
-		$message = json_encode(array(
-			'id' => uniqid().time(),
-			'command' => 'login',
-			'type' => 'sender', 
-			'authorization'=>base64_encode($username.':'.$password)
-			)
-		);
-		if(!socket_send($this->socket, $message, strlen($message), 0)) 
-		{
-			$errorcode = socket_last_error();
-			$errormsg = socket_strerror($errorcode);
-
-			$this->log("Could not send data: [$errorcode] $errormsg \n");
-			$this->connected = false;
-			return false;
-		}
-		$this->connected = true;
-		usleep(10000);
-		return true;
-	}
-
-	/**
 	 * Connect to the server
 	 */
 	public function connect()
 	{
+		$this->clientID = uniqid().time();
 		if(!($this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP))) {
 			$errorcode = socket_last_error();
 			$errormsg = socket_strerror($errorcode);
@@ -87,6 +55,40 @@ class MQSender
 			$this->connected = false;
 			return false;
 		}
+	}
+
+	/**
+	 * Login
+ 	 * @param String $username Ursename
+	 * @param String $password Password
+	 * @return Boolean true if success, false if failed
+	 */
+
+	private function login($username, $password)
+	{
+		if($this->socket == null)
+		{
+			$this->connect();
+		}
+		$message = json_encode(array(
+			'id' => $this->clientID,
+			'command' => 'login',
+			'type' => 'sender', 
+			'authorization'=>base64_encode($username.':'.$password)
+			)
+		);
+		if(!socket_send($this->socket, $message, strlen($message), 0)) 
+		{
+			$errorcode = socket_last_error();
+			$errormsg = socket_strerror($errorcode);
+
+			$this->log("Could not send data: [$errorcode] $errormsg \n");
+			$this->connected = false;
+			return false;
+		}
+		$this->connected = true;
+		usleep(10000);
+		return true;
 	}
 
 	/**
