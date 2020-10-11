@@ -15,7 +15,7 @@ $sender->connect();
 
 $channel = 'sms';
 $sender->showLog = false;
-for($i = 0; $i < 1000; $i++)
+for($i = 0; $i < 100; $i++)
 {
 
 	$data = array(

@@ -112,7 +112,6 @@ class MQSender
 				'data'=>$data
 				)
 			);
-			//Send the message to the address
 			if(!socket_send($this->socket, $message, strlen($message), 0)) 
 			{
 				$errorcode = socket_last_error();
