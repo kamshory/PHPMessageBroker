@@ -125,10 +125,8 @@ class Server extends MQServer{
     private $dbUser = null;
     private $dbPass = null;
     private $recordLimit = 5;
-    
-    public function __construct($port = 8887, $numberOfReceiver = 0, $userList = null, 
-		$userFromFile = false, $keepData = false, $dbHost = null, $dbPort = null, 
-		$dbName = null, $dbUser = null, $dbPass = null)
+    public function __construct($port = 8887, $numberOfReceiver = 1, $userList = null, $userFromFile = false, 
+        $keepData = false, $dbHost = null, $dbPort = null, $dbName = null, $dbUser = null, $dbPass = null)
     {
         parent::__construct($port, $numberOfReceiver, $userList, $userFromFile);
         if($keepData)
@@ -150,6 +148,7 @@ class Server extends MQServer{
         {
             $url = "mysql:host=".$this->dbHost.";port=".$this->dbPort.";dbname=".$this->dbName;
             $this->database = new PDO($url, $this->dbUser, $this->dbPass);
+            $this->database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
         catch(PDOException $e)
         {
@@ -180,7 +179,7 @@ class Server extends MQServer{
                 }
                 $this->nextRecord = $num;
 
-                $sql = "select * from data where channel = '$channel' limit 0, ".$this->recordLimit;
+                $sql = "select * from data where channel = '$channel' order by data_id asc limit 0, ".$this->recordLimit;
                 $db_rs = $this->database->prepare($sql);
                 $db_rs->execute();
                 
@@ -205,10 +204,10 @@ class Server extends MQServer{
                 return null;
             }
         }
-        catch(Exception $e)
+        catch(PDOException $e)
         {
             $this->initDatabase();
-            return null;
+            return $this->loadFromDatabase($channel);
         }
  	}
 
@@ -222,16 +221,27 @@ class Server extends MQServer{
             $db_rs = $this->database->prepare($sql);
             $db_rs->execute();    
         }
-        catch(Exception $e)
+        catch(PDOException $e)
         {
             $this->initDatabase();
+            $this->saveToDatabase($clientData);
         }
 	}
 }
 
-$port = 8887;
-$server = new Server($port, 0, dirname(__FILE__)."/.htpasswd", true, 
-	true, "localhost", 3306, "message_broker", "root", "alto1234");
+$serverPort = 8887;
+$numberOfReceiver = 0;
+$userList = dirname(__FILE__)."/.htpasswd";
+$userFromFile = true;
+$useDatabase = true;
+$databaseHost = "localhost";
+$databasePort = 3306;
+$databaseName = "message_broker";
+$databaseUser = "root";
+$databasePassword = "alto1234";
+
+$server = new Server($serverPort, $numberOfReceiver, $userList, $userFromFile, 
+    $useDatabase, $databaseHost, $databasePort, $databaseName, $databaseUser, $databsePassword);
 $server->showLog = false;
 $server->run();
 ?>

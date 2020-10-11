@@ -36,8 +36,9 @@ class Server extends MQServer{
         // Init database here
         try
         {
-            $url = "mysql:host=".$this->dbHost.";port=" . $this->dbPort . ";dbname=" . $this->dbName;
+            $url = "mysql:host=".$this->dbHost.";port=".$this->dbPort.";dbname=".$this->dbName;
             $this->database = new PDO($url, $this->dbUser, $this->dbPass);
+            $this->database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
         catch(PDOException $e)
         {
@@ -93,10 +94,10 @@ class Server extends MQServer{
                 return null;
             }
         }
-        catch(Exception $e)
+        catch(PDOException $e)
         {
             $this->initDatabase();
-            return null;
+            return $this->loadFromDatabase($channel);
         }
  	}
 
@@ -110,15 +111,27 @@ class Server extends MQServer{
             $db_rs = $this->database->prepare($sql);
             $db_rs->execute();    
         }
-        catch(Exception $e)
+        catch(PDOException $e)
         {
             $this->initDatabase();
+            $this->saveToDatabase($clientData);
         }
 	}
 }
 
-$port = 8887;
-$server = new Server($port, 0, dirname(__FILE__)."/.htpasswd", true, true, "localhost", 3306, "message_broker", "root", "alto1234");
+$serverPort = 8887;
+$numberOfReceiver = 0;
+$userList = dirname(__FILE__)."/.htpasswd";
+$userFromFile = true;
+$useDatabase = true;
+$databaseHost = "localhost";
+$databasePort = 3306;
+$databaseName = "message_broker";
+$databaseUser = "root";
+$databasePassword = "alto1234";
+
+$server = new Server($serverPort, $numberOfReceiver, $userList, $userFromFile, 
+    $useDatabase, $databaseHost, $databasePort, $databaseName, $databaseUser, $databsePassword);
 $server->showLog = false;
 $server->run();
 ?>
